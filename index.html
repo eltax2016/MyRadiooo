@@ -1,0 +1,2470 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Smart Wall Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #131b2e;
+            --bg-card: #1c2640;
+            --accent: #8b5cf6;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --radius: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; user-select: none; }
+
+        html, body {
+            background-color: var(--bg-primary) !important;
+            color: var(--text-main);
+            height: 100vh !important;
+            width: 100vw !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+        }
+
+        header {
+            height: 52px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            flex-shrink: 0;
+        }
+
+        .header-pill {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+        }
+        .header-pill i { color: var(--accent); }
+
+        .top-clock { font-size: 18px; font-weight: 700; color: var(--text-main); }
+
+        .saver-trigger-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .workspace { flex: 1; display: flex; overflow: hidden; width: 100vw; height: calc(100vh - 52px - 34px); }
+
+        nav {
+            width: 68px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 0;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .nav-item {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            cursor: pointer;
+        }
+        .nav-item i { font-size: 15px; }
+        .nav-item span { font-size: 8px; font-weight: 500; }
+        .nav-item.active { background: var(--accent); color: #fff; box-shadow: 0 4px 15px var(--accent-glow); }
+
+        .content-container { 
+            flex: 1; 
+            overflow-y: auto; 
+            overflow-x: hidden !important; 
+            padding: 16px 20px; 
+            background-color: var(--bg-primary); 
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .view-section { display: none; flex-direction: column; animation: fadeIn 0.3s ease forwards; padding-bottom: 20px; width: 100%; }
+        .view-section.active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-title { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+        .section-subtitle { color: var(--text-muted); font-size: 12px; margin-bottom: 16px; }
+
+        .radio-grid { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+
+        .radio-player-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+        }
+
+        .vinyl-container {
+            width: 110px; height: 110px;
+            border-radius: 50%;
+            background: #000;
+            border: 5px solid rgba(255,255,255,0.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 12px;
+        }
+        .vinyl-container.spinning { animation: spin 6s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .vinyl-inner {
+            width: 38px; height: 38px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 15px;
+        }
+
+        .player-controls { display: flex; align-items: center; gap: 16px; margin-top: 12px; }
+
+        .ctrl-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 15px;
+        }
+        .ctrl-btn.main-play { background: var(--accent); color: #fff; width: 52px; height: 52px; font-size: 20px; }
+
+        .station-list {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px;
+            display: flex; flex-direction: column; gap: 8px;
+            width: 100%;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 12px;
+        }
+
+        .station-row { display: flex; align-items: center; gap: 6px; width: 100%; }
+
+        .station-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            border-radius: 10px;
+            color: var(--text-main);
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; flex: 1;
+            min-width: 0;
+        }
+        .station-btn.playing { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        .station-move-group { display: flex; gap: 4px; flex-shrink: 0; }
+        .btn-move-station {
+            background: var(--bg-card);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            width: 32px; height: 38px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 12px;
+        }
+        .btn-move-station:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        .btn-delete-station {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 14px;
+            flex-shrink: 0;
+        }
+        .btn-delete-station:hover { background: #ef4444; color: #fff; }
+
+        input, select {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 10px;
+            outline: none; font-size: 13px; width: 100%;
+        }
+
+        .btn-action {
+            background: var(--accent);
+            color: #fff; border: none;
+            padding: 10px 16px;
+            border-radius: 10px; font-weight: 600;
+            cursor: pointer; white-space: nowrap;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .city-results-list {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            max-height: 200px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 6px;
+            padding: 8px; margin-top: 8px;
+        }
+
+        .city-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 12px; border-radius: 8px;
+            background: var(--bg-secondary); font-size: 13px; cursor: pointer;
+        }
+        .city-item:hover { border: 1px solid var(--accent); }
+
+        .manual-add-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .weather-today-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px;
+            width: 100%;
+        }
+
+        .forecast-7days-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+            width: 100%;
+        }
+
+        .day-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 12px 8px;
+            text-align: center;
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+        }
+
+        .cards-grid { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            margin-bottom: 16px; 
+            width: 100%; 
+        }
+
+        .finance-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex; flex-direction: column; gap: 10px;
+            width: 100%;
+        }
+        .finance-card-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .currency-swap-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+        .currency-swap-btn:hover { background: var(--accent); color: #fff; transform: rotate(180deg); }
+
+        .bid-ask-box {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+            background: var(--bg-card); padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border);
+            font-size: 11px; color: var(--text-muted);
+            width: 100%;
+        }
+        .bid-ask-val { font-size: 13px; font-weight: 600; color: var(--text-main); }
+
+        .time-tools-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            max-width: 450px; margin: 0 auto; width: 100%;
+        }
+
+        .time-subtabs {
+            display: flex; gap: 8px; margin-bottom: 16px; background: var(--bg-card); padding: 4px; border-radius: 12px; border: 1px solid var(--border);
+        }
+        .subtab-btn {
+            background: transparent; border: none; color: var(--text-muted);
+            padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+        }
+        .subtab-btn.active { background: var(--accent); color: #fff; }
+
+        .time-display-box {
+            font-size: 52px; font-weight: 700; color: var(--text-main);
+            margin: 12px 0; letter-spacing: 2px;
+        }
+
+        .time-controls-row {
+            display: flex; gap: 10px; margin-bottom: 16px; width: 100%; justify-content: center;
+        }
+
+        .timer-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 18px; border-radius: 10px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .timer-btn:hover { border-color: var(--accent); }
+        .timer-btn.start { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .timer-btn.alarm-stop { background: #ef4444; color: #fff; border-color: #ef4444; animation: pulseAlarm 0.8s infinite; }
+
+        @keyframes pulseAlarm {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 15px #ef4444; }
+            100% { transform: scale(1); }
+        }
+
+        .timer-adjust-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+
+        .adj-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            width: 44px; height: 38px; border-radius: 8px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+        }
+        .adj-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        .laps-container {
+            width: 100%; max-height: 120px; overflow-y: auto; margin-top: 10px;
+            background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); padding: 8px;
+            display: none; font-size: 12px; color: var(--text-muted); text-align: left;
+        }
+        .lap-item { display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 1px solid var(--border); }
+
+        .app-download-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 480px;
+            margin: 10px auto;
+            gap: 12px;
+        }
+        .app-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 12px;
+            width: 100%;
+        }
+        .app-card i { font-size: 42px; color: var(--accent); }
+        .app-card h3 { font-size: 18px; font-weight: 600; }
+        
+        .download-counter-badge {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .download-counter-badge b { color: var(--accent); }
+
+        .info-card-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        .info-card-box h3 {
+            font-size: 15px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-card-box p, .info-card-box li {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+        .info-card-box ul {
+            padding-left: 18px;
+        }
+
+        footer {
+            height: 34px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 12px; font-size: 11px; color: var(--text-muted); flex-shrink: 0;
+            width: 100%;
+        }
+
+        #screensaver {
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: #070910; z-index: 9999;
+            display: none; flex-direction: column;
+            align-items: center; justify-content: space-between;
+            padding: 16px 14px 12px 14px; text-align: center;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        #screensaver.active { display: flex; animation: fadeIn 0.4s ease; }
+        
+        .saver-content-center {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex: 1; width: 100%; gap: 6px;
+            pointer-events: none;
+            margin-top: 4px; margin-bottom: 4px;
+        }
+        .saver-content-center > * { pointer-events: auto; }
+
+        .saver-clock { font-size: 58px; font-weight: 700; color: var(--text-main); line-height: 1; }
+        .saver-date { font-size: 13px; color: var(--accent); font-weight: 500; }
+        
+        .saver-rotate-box {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-style: italic;
+            min-height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 90%;
+            text-align: center;
+        }
+        
+        .saver-widgets-row { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 650px; }
+        .saver-widget-box { background: rgba(28, 38, 64, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 6px 12px; display: flex; align-items: center; gap: 10px; cursor: default; }
+
+        .saver-hourly-strip {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            background: rgba(28, 38, 64, 0.6); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; 
+            padding: 8px 12px; 
+            width: 100%; 
+            max-width: 650px; 
+            cursor: default;
+            flex-shrink: 0;
+        }
+        .saver-hour-item {
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            font-size: 10px; color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px;
+            border-radius: 8px;
+        }
+        .saver-hour-item b { color: var(--text-main); font-size: 11px; }
+
+        .visualizer-container {
+            margin: 2px 0;
+            height: 26px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 5px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .eq-box { display: flex; gap: 5px; height: 100%; align-items: flex-end; width: 100%; justify-content: center; }
+        .eq-bar { width: 8px; border-radius: 4px; transition: height 0.03s ease; height: 4px; min-height: 4px; }
+
+        .news-ticker-bar {
+            width: 100%; max-width: 650px;
+            background: rgba(19, 27, 46, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px; height: 30px;
+            display: flex; align-items: center; overflow: hidden;
+            position: relative; flex-shrink: 0; cursor: default;
+        }
+        .news-badge {
+            background: var(--accent); color: #fff; font-size: 10px; font-weight: 700;
+            padding: 0 10px; height: 100%; display: flex; align-items: center; gap: 6px; z-index: 2; text-transform: uppercase;
+        }
+        .news-track-container { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+        .news-track {
+            display: inline-block; white-space: nowrap; animation: tickerScroll 40s linear infinite;
+            font-size: 11px; color: var(--text-main); padding-left: 100%;
+        }
+        .news-track span { margin-right: 40px; }
+        .news-track span b { color: var(--accent); margin-right: 6px; }
+        @keyframes tickerScroll { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        @media (min-width: 768px) {
+            .radio-grid { display: grid; grid-template-columns: 320px 1fr; }
+            .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); }
+            .saver-clock { font-size: 70px; }
+            .saver-widgets-row { flex-direction: row; max-width: 750px; }
+            .saver-hourly-strip { max-width: 750px; grid-template-columns: repeat(6, 1fr); }
+            .news-ticker-bar { max-width: 750px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <div class="header-pill"><i class="fa-solid fa-location-dot"></i> <span id="header-city-name">Livingston, Scotland</span></div>
+        </div>
+        <div class="top-clock" id="top-clock-display">--:--</div>
+        <div class="header-right">
+            <button class="saver-trigger-btn" onclick="toggleScreensaver()"><i class="fa-solid fa-moon"></i></button>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <nav>
+            <button class="nav-item active" onclick="switchTab('radio', this)"><i class="fa-solid fa-radio"></i><span data-i18n="nav_radio">Radio</span></button>
+            <button class="nav-item" onclick="switchTab('weather', this)"><i class="fa-solid fa-cloud-sun"></i><span data-i18n="nav_weather">Weather</span></button>
+            <button class="nav-item" onclick="switchTab('finance', this)"><i class="fa-solid fa-coins"></i><span data-i18n="nav_finance">Finance</span></button>
+            <button class="nav-item" onclick="switchTab('timer', this)"><i class="fa-solid fa-stopwatch"></i><span data-i18n="nav_timer">Time</span></button>
+            <button class="nav-item" onclick="switchTab('info', this)"><i class="fa-solid fa-circle-info"></i><span data-i18n="nav_info">Info</span></button>
+            <button class="nav-item" onclick="switchTab('app', this)"><i class="fa-solid fa-mobile-screen"></i><span data-i18n="nav_app">App</span></button>
+            <button class="nav-item" onclick="switchTab('settings', this)"><i class="fa-solid fa-gear"></i><span data-i18n="nav_settings">Settings</span></button>
+        </nav>
+
+        <div class="content-container">
+
+            <div id="tab-radio" class="view-section active">
+                <div class="section-title" data-i18n="radio_title">Radio Player</div>
+                <div class="section-subtitle">Wybierz stację z listy lub dodaj własny link</div>
+                
+                <div class="radio-grid">
+                    <div class="radio-player-card">
+                        <div class="vinyl-container" id="vinyl">
+                            <div class="vinyl-inner"><i class="fa-solid fa-music"></i></div>
+                        </div>
+                        <h2 id="current-station-title" style="font-size: 18px; margin-bottom: 2px;" data-i18n="no_station_title">No station</h2>
+                        
+                        <div class="player-controls">
+                            <button class="ctrl-btn" onclick="adjustVolume(-0.1)"><i class="fa-solid fa-volume-low"></i></button>
+                            <button class="ctrl-btn main-play" onclick="togglePlay()"><i class="fa-solid fa-play" id="play-icon"></i></button>
+                            <button class="ctrl-btn" onclick="adjustVolume(0.1)"><i class="fa-solid fa-volume-high"></i></button>
+                        </div>
+                    </div>
+
+                    <div style="width: 100%;">
+                        <div class="manual-add-box">
+                            <div style="font-size: 12px; font-weight: 600; color: var(--accent);"><i class="fa-solid fa-plus-circle"></i> Dodaj stację ręcznie:</div>
+                            <input type="text" id="manual-station-name" placeholder="Nazwa stacji..." style="margin-bottom: 4px;">
+                            <input type="text" id="manual-station-url" placeholder="Bezpośredni link do strumienia (np. https://...)" style="margin-bottom: 6px;">
+                            <button class="btn-action" onclick="addManualStation()" style="width: 100%; justify-content: center;"><i class="fa-solid fa-check"></i> Dodaj do ulubionych</button>
+                        </div>
+
+                        <div style="font-size: 13px; font-weight: 600; margin-top: 14px; margin-bottom: 6px;">Twoja lista stacji radiowych:</div>
+                        <div class="station-list" id="station-list-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-weather" class="view-section">
+                <div class="section-title" data-i18n="weather_title">7-Day Weather Forecast</div>
+                <div class="section-subtitle"><span data-i18n="weather_loc">Location</span>: <b id="weather-city-label" style="color: var(--accent);">Livingston, Scotland</b></div>
+                
+                <div style="display:flex; flex-direction:column; gap:12px; width: 100%;">
+                    <div class="weather-today-card">
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted);" data-i18n="weather_today">Today</div>
+                            <div style="font-size: 32px; font-weight: 700;" id="today-temp">--°C</div>
+                            <p style="color: var(--text-muted); font-size: 13px;" id="today-desc">Loading...</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <i id="today-icon" class="fa-solid fa-cloud-sun" style="font-size: 36px; color: var(--accent); margin-bottom: 6px;"></i>
+                            <div style="font-size: 11px; color: var(--text-muted);" id="today-wind"><i class="fa-solid fa-wind"></i> Wiatr: -- km/h</div>
+                            <div style="font-size: 11px; color: var(--text-muted);" id="today-humidity"><i class="fa-solid fa-droplet"></i> Wilgotność: --%</div>
+                        </div>
+                    </div>
+                    <div class="forecast-7days-grid" id="forecast-7days-container"></div>
+                </div>
+            </div>
+
+            <div id="tab-finance" class="view-section">
+                <div class="section-title" data-i18n="finance_title">Finance, Currencies & Cryptocurrencies</div>
+                <div class="section-subtitle" data-i18n="finance_subtitle">Live rates with Bid and Ask spreads</div>
+                
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;" data-i18n="fin_currencies">Main Currencies (click arrows to reverse direction):</div>
+                <div class="cards-grid" id="currency-cards-container"></div>
+
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; margin-top: 16px;" data-i18n="fin_cryptos">Cryptocurrencies (Top 3):</div>
+                <div class="cards-grid" id="crypto-cards-container"></div>
+            </div>
+
+            <div id="tab-timer" class="view-section">
+                <div class="section-title" data-i18n="time_title">Time Tools</div>
+                <div class="section-subtitle" data-i18n="time_subtitle">Select timer, stopwatch or set alarm</div>
+                
+                <div class="time-tools-container">
+                    <div class="time-subtabs">
+                        <button class="subtab-btn active" id="subtab-timer-btn" onclick="switchTimeMode('timer')" data-i18n="mode_timer">Timer</button>
+                        <button class="subtab-btn" id="subtab-stopwatch-btn" onclick="switchTimeMode('stopwatch')" data-i18n="mode_stopwatch">Stopwatch</button>
+                        <button class="subtab-btn" id="subtab-alarm-btn" onclick="switchTimeMode('alarm')" data-i18n="mode_alarm">Alarm</button>
+                    </div>
+
+                    <div id="mode-timer-pane" class="time-pane" style="width: 100%;">
+                        <div id="timer-label" style="font-size: 13px; color: var(--text-muted); font-weight: 500;" data-i18n="timer_ready">Ready to set</div>
+                        <div class="time-display-box" id="timer-display">05:00</div>
+                        
+                        <div class="time-controls-row">
+                            <button class="timer-btn start" id="timer-toggle-btn" onclick="toggleTimer()"><i class="fa-solid fa-play" id="timer-icon-play"></i> <span data-i18n="btn_start">Start</span></button>
+                            <button class="timer-btn" onclick="resetTimer()"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="btn_reset">Reset</span></button>
+                        </div>
+
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;" data-i18n="timer_adjust_hint">Quick time adjust (+ / -):</div>
+                        <div class="timer-adjust-row">
+                            <button class="adj-btn" onclick="adjustTimerMinutes(-10)">-10m</button>
+                            <button class="adj-btn" onclick="adjustTimerMinutes(-5)">-5m</button>
+                            <button class="adj-btn" onclick="adjustTimerMinutes(-1)">-1m</button>
+                            <button class="adj-btn" onclick="adjustTimerMinutes(1)">+1m</button>
+                            <button class="adj-btn" onclick="adjustTimerMinutes(5)">+5m</button>
+                            <button class="adj-btn" onclick="adjustTimerMinutes(10)">+10m</button>
+                        </div>
+                    </div>
+
+                    <div id="mode-stopwatch-pane" class="time-pane" style="display: none; width: 100%;">
+                        <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;" data-i18n="stopwatch_ready">Stopwatch ready</div>
+                        <div class="time-display-box" id="stopwatch-display">00:00.00</div>
+                        
+                        <div class="time-controls-row">
+                            <button class="timer-btn start" id="sw-toggle-btn" onclick="toggleStopwatch()"><i class="fa-solid fa-play" id="sw-icon-play"></i> <span data-i18n="btn_start">Start</span></button>
+                            <button class="timer-btn" onclick="lapStopwatch()" data-i18n="btn_lap">Lap</button>
+                            <button class="timer-btn" onclick="resetStopwatch()" data-i18n="btn_reset">Reset</button>
+                        </div>
+                        <div class="laps-container" id="sw-laps-list"></div>
+                    </div>
+
+                    <div id="mode-alarm-pane" class="time-pane" style="display: none; width: 100%;">
+                        <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;" data-i18n="alarm_hint">Set alarm time:</div>
+                        <div style="margin: 14px 0; display: flex; justify-content: center; gap: 10px;">
+                            <input type="time" id="alarm-time-input" value="07:00" style="width: 140px; text-align: center; font-size: 20px; font-weight: 700;">
+                        </div>
+                        
+                        <div class="time-controls-row">
+                            <button class="timer-btn start" id="alarm-toggle-btn" onclick="toggleAlarmActive()"><i class="fa-solid fa-bell" id="alarm-icon"></i> <span id="alarm-btn-text" data-i18n="alarm_set">Turn on alarm</span></button>
+                        </div>
+                        <div id="alarm-status-label" style="font-size: 12px; color: var(--text-muted); margin-top: 6px;" data-i18n="alarm_inactive">Alarm inactive</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- NOWA ZAKŁADKA: INFO / O PROJEKCIE -->
+            <div id="tab-info" class="view-section">
+                <div class="section-title" data-i18n="info_title">O projekcie i działaniu</div>
+                <div class="section-subtitle" data-i18n="info_subtitle">Dowiedz się więcej o aplikacji Smart Wall Dashboard</div>
+
+                <div class="info-card-box">
+                    <h3 data-i18n="info_h1"><i class="fa-solid fa-lightbulb"></i> Czym jest Smart Wall Dashboard?</h3>
+                    <p data-i18n="info_p1">To wszechstronny pulpit nawigacyjny stworzony z myślą o tabletach, inteligentnych ekranach ściennych oraz przeglądarkach. Łączy w sobie odtwarzacze radia online, aktualną pogodę, finanse i kursy walut na żywo, narzędzia czasu oraz zaawansowany wygaszacz ekranu z wiadomościami i imieninami.</p>
+                </div>
+
+                <div class="info-card-box">
+                    <h3 data-i18n="info_h2"><i class="fa-solid fa-flask"></i> Projekt w fazie testów (Beta)</h3>
+                    <p data-i18n="info_p2">Cały system jest stale rozwijany i testowany. Regularnie wprowadzamy ulepszenia, optymalizujemy działanie strumieni radiowych oraz dodajemy nowe funkcje na podstawie opinii użytkowników.</p>
+                </div>
+
+                <div class="info-card-box">
+                    <h3 data-i18n="info_h3"><i class="fa-solid fa-radio"></i> Jak dodawać własne stacje radiowe?</h3>
+                    <p data-i18n="info_p3">W zakładce <b>Radio</b> znajdziesz sekcję „Dodaj stację ręcznie”. Aby dodać ulubioną stację:</p>
+                    <ul>
+                        <li data-i18n="info_li1">Wpisz własną nazwę stacji.</li>
+                        <li data-i18n="info_li2">Wklej bezpośredni adres URL strumienia audio (musi być to link bezpośredni do pliku strumienia MP3/AAC, np. zaczynający się od https://).</li>
+                        <li data-i18n="info_li3">Kliknij przycisk dodawania – stacja natychmiast trafi na Twoją osobistą listę ulubionych.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="tab-app" class="view-section">
+                <div class="section-title" data-i18n="app_tab_title">Smart Wall Dashboard - Aplikacja</div>
+                <div class="section-subtitle" data-i18n="app_tab_sub">Pobierz plik instalacyjny dla systemu Android</div>
+                
+                <div class="app-download-grid">
+                    <div class="app-card">
+                        <i class="fa-brands fa-android"></i>
+                        <h3 data-i18n="android_title">Android / APK</h3>
+                        <a href="MyRadiooo.apk" download onclick="incrementDownloadCount()" class="btn-action" style="padding: 14px 28px; font-size: 16px; width: 100%; text-decoration: none;">
+                            <i class="fa-solid fa-download"></i> <span data-i18n="btn_install_android">Pobierz MyRadiooo.apk</span>
+                        </a>
+                        <div class="download-counter-badge">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> <span data-i18n="dl_counter_text">Pobrań aplikacji:</span> <b id="download-count-val">142</b>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-settings" class="view-section">
+                <div class="section-title" data-i18n="settings_title">Settings</div>
+                <div class="section-subtitle" data-i18n="settings_subtitle">Select city, theme and language</div>
+                
+                <div style="display:flex; flex-direction:column; gap:16px; background:var(--bg-secondary); padding:16px; border-radius:var(--radius); border:1px solid var(--border); width: 100%;">
+                    <div>
+                        <label style="font-size:13px; font-weight:500;" data-i18n="settings_city_label">Enter city (e.g. London, Livingston, Barcelona):</label>
+                        <div style="display:flex; gap:8px; margin-top:4px;">
+                            <input type="text" id="city-search-input" data-i18n-placeholder="settings_city_placeholder" placeholder="Type city...">
+                            <button class="btn-action" onclick="searchCityList()"><i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="btn_search">Search</span></button>
+                        </div>
+                        <div id="city-selection-results" class="city-results-list" style="display:none;"></div>
+                    </div>
+
+                    <div>
+                        <label style="font-size:13px; font-weight:500;" data-i18n="settings_lang_label">App Language:</label>
+                        <select id="lang-select" onchange="changeLanguage(this.value)" style="margin-top:4px;">
+                            <option value="en">English</option>
+                            <option value="pl">Polski</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:13px; font-weight:500;" data-i18n="settings_theme_label">Color Theme (10 options):</label>
+                        <select id="theme-select" onchange="changeTheme(this.value)" style="margin-top:4px;">
+                            <option value="purple" data-i18n="theme_1">1. Purple Twilight</option>
+                            <option value="amber" data-i18n="theme_2">2. Golden Amber</option>
+                            <option value="emerald" data-i18n="theme_3">3. Emerald Green</option>
+                            <option value="cyber" data-i18n="theme_4">4. Cyberpunk Neon Blue</option>
+                            <option value="ruby" data-i18n="theme_5">5. Ruby Red</option>
+                            <option value="sunset" data-i18n="theme_6">6. Sunset Orange</option>
+                            <option value="arctic" data-i18n="theme_7">7. Arctic Blue</option>
+                            <option value="matrix" data-i18n="theme_8">8. Matrix Green</option>
+                            <option value="rose" data-i18n="theme_9">9. Rose Quartz</option>
+                            <option value="monochrome" data-i18n="theme_10">10. Minimalist Gray</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:13px; font-weight:500;" data-i18n="settings_eq_label">Equalizer Visualizer (Screensaver):</label>
+                        <select id="eq-select" onchange="changeEqualizerStyle(this.value)" style="margin-top:4px;">
+                            <option value="1">1. Winamp LED (Rainbow/Mix)</option>
+                            <option value="2">2. Retro Car-Audio (Turquoise LED)</option>
+                            <option value="3">3. Cyberpunk Neon (Purple/Pink)</option>
+                            <option value="4">4. Matrix Green</option>
+                            <option value="5">5. Sunset Amber</option>
+                            <option value="6">6. Oscilloscope / Wave</option>
+                            <option value="7">7. Peak Dots</option>
+                            <option value="8">8. Ruby Red</option>
+                            <option value="9">9. Arctic Blue</option>
+                            <option value="10">10. Multi-Graphic Mixer</option>
+                            <option value="off">Off</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <span>GBP/PLN: 5.1040</span>
+            <span style="opacity: 0.4;">|</span>
+            <span><i class="fa-solid fa-eye" style="color: var(--accent);"></i> <span data-i18n="footer_visits">Odwiedzin</span>: <b id="visit-count-val">1,258</b></span>
+        </div>
+        <div id="footer-weather-text">Loading...</div>
+        <div id="footer-radio-status"><i class="fa-solid fa-stop" style="color:#ef4444;"></i> STOPPED</div>
+    </footer>
+
+    <div id="screensaver">
+        <div class="news-ticker-bar">
+            <div class="news-badge" data-i18n="news_badge_label"><i class="fa-solid fa-globe"></i> NEWS</div>
+            <div class="news-track-container">
+                <div class="news-track" id="news-ticker-track">
+                    <span><b>Loading...</b> Fetching latest information from around the world...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="saver-content-center">
+            <div class="saver-clock" id="saver-clock-display">--:--</div>
+            <div class="saver-date" id="saver-date-display">...</div>
+            <div class="saver-rotate-box" id="saver-rotate-display">Imieniny dzisiaj: ...</div>
+            
+            <div class="visualizer-container" id="visualizer-box"></div>
+
+            <div class="saver-widgets-row">
+                <div class="saver-widget-box" style="flex:1;">
+                    <i id="saver-weather-icon" class="fa-solid fa-cloud-sun" style="font-size: 22px; color: var(--accent);"></i>
+                    <div style="text-align:left;">
+                        <div style="font-size: 13px; font-weight: 600;" id="saver-city-name">Livingston</div>
+                        <div style="color: var(--text-muted); font-size: 11px;" id="saver-weather-desc">--°C</div>
+                        <div style="color: var(--text-muted); font-size: 10px; opacity:0.8;" id="saver-weather-extra">Wiatr: -- km/h | Wilgotność: --%</div>
+                    </div>
+                </div>
+                
+                <div class="saver-widget-box" style="flex:1; justify-content: space-between;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-radio" style="font-size: 18px; color: var(--accent);"></i>
+                        <div style="text-align:left;">
+                            <div id="saver-station-name" style="font-size: 13px; font-weight: 600;" data-i18n="no_station_title">No station</div>
+                            <div id="saver-station-status" style="color: var(--text-muted); font-size: 10px;"><i class="fa-solid fa-circle-stop"></i> STOPPED</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;" data-i18n="saver_hourly_title">Next 6 hours forecast:</div>
+            <div class="saver-hourly-strip" id="saver-hourly-container"></div>
+        </div>
+
+        <div style="font-size: 10px; color: var(--text-muted); opacity: 0.6; padding-bottom: 2px;">Kliknij gdziekolwiek w tło, aby wyłączyć wygaszacz</div>
+    </div>
+
+    <audio id="audio-stream" crossorigin="anonymous" preload="none"></audio>
+
+    <script>
+        // Obsługa liczników odwiedzin i pobrań z localStorage
+        let visits = parseInt(localStorage.getItem('dash_visit_count') || '1257') + 1;
+        localStorage.setItem('dash_visit_count', visits);
+        document.getElementById('visit-count-val').innerText = visits.toLocaleString();
+
+        let downloads = parseInt(localStorage.getItem('dash_download_count') || '142');
+        document.getElementById('download-count-val').innerText = downloads;
+
+        function incrementDownloadCount() {
+            downloads++;
+            localStorage.setItem('dash_download_count', downloads);
+            document.getElementById('download-count-val').innerText = downloads;
+        }
+
+        const quotesData = {
+            pl: [
+                "„Nie bój się porzucić dobrego dla wspaniałego.” – John D. Rockefeller",
+                "„Życie to to, co ci się dzieje, kiedy jesteś zajęty innymi planami.” – John Lennon",
+                "„Rób to, co możesz, z tym, co masz, tam, gdzie jesteś.” – Theodore Roosevelt",
+                "„Sukces to nie przypadek. To ciężka praca i wytrwałość.” – Pelé",
+                "„Człowiek staje się tym, o czym przez cały dzień myśli.” – Ralph Waldo Emerson",
+                "„Wyobraźnia jest ważniejsza od wiedzy.” – Albert Einstein",
+                "„Kto pyta, błądzi przez pięć minut. Kto nie pyta, błądzi całe życie.” – Przysłowie",
+                "„Najlepszym sposobem na przewidzenie przyszłości jest jej stworzenie.” – Peter Drucker",
+                "„Droga do sukcesu zawsze jest w budowie.” – Lily Tomlin",
+                "„Nawet najdłuższa podróż zaczyna się od jednego kroku.” – Lao Tse",
+                "„Twoje ograniczenia to tylko Twoja wyobraźnia.” – Autor nieznany",
+                "„Porażka to szansa, aby zacząć jeszcze raz, tym razem mądrzej.” – Henry Ford",
+                "„Cierpliwość i wytrwałość tworzą kombinację sukcesu.” – Napoleon Hill",
+                "„Nie liczy się co widzą inni, ale co Ty w tym widzisz.” – Maria Konopnicka",
+                "„Każdy dzień jest nową szansą, aby zmienić swoje życie.” – Autor nieznany"
+            ],
+            en: [
+                "„Do not be afraid to give up the good to go for the great.” – John D. Rockefeller",
+                "„Life is what happens when you're busy making other plans.” – John Lennon",
+                "„Do what you can, with what you have, where you are.” – Theodore Roosevelt",
+                "„Success is no accident. It is hard work and perseverance.” – Pelé",
+                "„A man is what he thinks about all day long.” – Ralph Waldo Emerson",
+                "„Imagination is more important than knowledge.” – Albert Einstein",
+                "„He who asks is a fool for five minutes, he who does not remains a fool forever.” – Proverb",
+                "„The best way to predict the future is to create it.” – Peter Drucker",
+                "„The road to success is always under construction.” – Lily Tomlin",
+                "„A journey of a thousand miles begins with a single step.” – Lao Tzu",
+                "„Your only limit is your imagination.” – Unknown",
+                "„Failure is simply the opportunity to begin again, more wisely.” – Henry Ford",
+                "„Patience and persistence make an unbeatable combination for success.” – Napoleon Hill",
+                "„Believe you can and you're halfway there.” – Theodore Roosevelt",
+                "„Every day is a new beginning. Take a deep breath and start again.” – Unknown"
+            ],
+            es: [
+                "„No tengas miedo de renunciar a lo bueno para perseguir lo grandioso.” – John D. Rockefeller",
+                "„La vida es lo que te pasa mientras estás ocupado haciendo otros planes.” – John Lennon",
+                "„Haz lo que puedas, con lo que tengas, donde estés.” – Theodore Roosevelt",
+                "„El éxito no es un accidente. Es trabajo duro y perseverancia.” – Pelé",
+                "„Un hombre es lo que piensa durante todo el día.” – Ralph Waldo Emerson",
+                "„La imaginación es más importante que el conocimiento.” – Albert Einstein",
+                "„El que pregunta es tonto por cinco minutos, el que no, lo es para siempre.” – Proverbio",
+                "„La mejor manera de predecir el futuro es creándolo.” – Peter Drucker",
+                "„El camino hacia el éxito siempre está en construcción.” – Lily Tomlin",
+                "„Un viaje de mil millas comienza con un solo paso.” – Lao Tsé",
+                "„Tu única limitación es tu propia mente.” – Desconocido",
+                "„El fracaso es solo la oportunidad de comenzar de nuevo más inteligentemente.” – Henry Ford",
+                "„La paciencia y la perseverancia hacen una combinación invencible.” – Napoleon Hill",
+                "„Cree que puedes y ya estás a mitad de camino.” – Theodore Roosevelt",
+                "„Cada día es una nueva oportunidad para cambiar tu vida.” – Desconocido"
+            ],
+            fr: [
+                "„N'ayez pas peur d'abandonner le bon pour aller vers le grand.” – John D. Rockefeller",
+                "„La vie est ce qui arrive pendant que vous êtes occupé à faire d'autres projets.” – John Lennon",
+                "„Faites ce que vous pouvez, avec ce que vous avez, là où vous êtes.” – Theodore Roosevelt",
+                "„Le succès n'est pas un accident. C'est du travail acharné et de la persévérance.” – Pelé",
+                "„Un homme devient ce à quoi il pense toute la journée.” – Ralph Waldo Emerson",
+                "„L'imagination est plus importante que la connaissance.” – Albert Einstein",
+                "„Celui qui pose une question est bête cinq minutes, celui qui ne la pose pas l'est toujours.” – Proverbe",
+                "„La meilleure façon de prédire l'avenir est de le créer.” – Peter Drucker",
+                "„Le chemin du succès est toujours en construction.” – Lily Tomlin",
+                "„Un voyage de mille lieues commence toujours par un premier pas.” – Lao-Tseu",
+                "„Votre seule limite est votre esprit.” – Inconnu",
+                "„L'échec est simplement l'opportunité de recommencer plus intelligemment.” – Henry Ford",
+                "„La patience et la persévérance font une combinaison imbattable.” – Napoleon Hill",
+                "„Croyez que vous le pouvez et vous êtes à mi-chemin.” – Theodore Roosevelt",
+                "„Chaque jour est une nouvelle chance de changer votre vie.” – Inconnu"
+            ],
+            de: [
+                "„Hab keine Angst, das Gute aufzugeben, um dem Großartigen nachzugehen.” – John D. Rockefeller",
+                "„Leben ist das, was passiert, während du andere Pläne schmiedest.” – John Lennon",
+                "„Tue, was du kannst, mit dem, was du hast, dort, wo du bist.” – Theodore Roosevelt",
+                "„Erfolg ist kein Zufall. Es ist harte Arbeit und Ausdauer.” – Pelé",
+                "„Ein Mensch ist das, worüber er den ganzen Tag nachdenkt.” – Ralph Waldo Emerson",
+                "„Fantasie ist wichtiger als Wissen.” – Albert Einstein",
+                "„Wer fragt, ist ein Narr für fünf Minuten. Wer nicht fragt, bleibt ein Narr.” – Sprichwort",
+                "„Die beste Art, die Zukunft vorherzusagen, ist, sie zu erfinden.” – Peter Drucker",
+                "„Der Weg zum Erfolg ist immer eine Baustelle.” – Lily Tomlin",
+                "„Auch eine Reise von tausend Meilen beginnt mit dem ersten Schritt.” – Lao Tse",
+                "„Deine einzige Grenze ist dein eigener Geist.” – Unbekannt",
+                "„Misserfolg ist einfach eine Gelegenheit, klüger von neuem zu beginnen.” – Henry Ford",
+                "„Geduld und Ausdauer bilden eine unschlagbare Kombination.” – Napoleon Hill",
+                "„Glaube daran, dass du es kannst, und du bist schon halb dort.” – Theodore Roosevelt",
+                "„Jeder Tag ist eine neue Chance, dein Leben zu verändern.” – Unbekannt"
+            ]
+        };
+
+        let rotationState = 0; // 0 = imieniny, 1 = cytat
+
+        function getQuoteOfDay() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            const diff = now - start;
+            const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const list = quotesData[currentLang] || quotesData['en'];
+            return list[dayOfYear % list.length];
+        }
+
+        function updateRotateContent() {
+            const rotateBox = document.getElementById('saver-rotate-display');
+            if (!rotateBox) return;
+            const t = translations[currentLang] || translations['en'];
+            
+            if (rotationState === 0) {
+                const monthDay = `${new Date().getMonth() + 1}-${new Date().getDate()}`;
+                const langDb = namedaysDb[currentLang] || namedaysDb['en'];
+                const names = langDb[monthDay] || langDb["10-29"] || "Theodore, Narcissus";
+                rotateBox.textContent = (t.nameday_prefix || "Imieniny dzisiaj: ") + names;
+            } else {
+                rotateBox.textContent = (t.quote_prefix || "Cytat dnia: ") + getQuoteOfDay();
+            }
+        }
+
+        setInterval(() => {
+            rotationState = rotationState === 0 ? 1 : 0;
+            updateRotateContent();
+        }, 10000);
+
+        let isPlaying = false;
+        let isUserPaused = true;
+        let isConnecting = false;
+        let wakeLock = null;
+        
+        let currentLang = localStorage.getItem('dash_lang') || 'en';
+        let savedCityObj = JSON.parse(localStorage.getItem('dash_city_obj') || '{"name":"Livingston","country":"United Kingdom","admin1":"Scotland","latitude":55.8834,"longitude":-3.5157,"timezone":"auto"}');
+
+        let timerSecondsLeft = 300;
+        let timerInterval = null;
+        let timerRunning = false;
+
+        let swMilliseconds = 0;
+        let swInterval = null;
+        let swRunning = false;
+        let swLaps = [];
+
+        let alarmActive = false;
+        let alarmTargetTime = null;
+        let alarmInterval = null;
+
+        const audioElement = document.getElementById('audio-stream');
+
+        const namedaysDb = {
+            pl: {
+                "10-29": "Wioletta, Teodor, Narcyz, Franciszek, Maksymilian",
+                "10-30": "Cezary, Edmunda, Przemysława, Zenobia",
+                "10-31": "Klaudiusz, Urban, Wolfgang, Anton",
+                "11-1": "Seweryn, Cezary, Aldona, Matylda",
+                "11-2": "Bożydar, Bohdana, Eustachy",
+                "11-3": "Sylwia, Hubert, Marcin",
+                "11-4": "Karol, Olgierd, Modest",
+                "11-5": "Elżbieta, Sławomir, Ziemowit",
+                "11-6": "Leonard, Ziemowit, Feliks",
+                "11-7": "Ernest, Florentyn, Achil",
+                "11-8": "Seweryn, Wiktoryn, Godfryd",
+                "11-9": "Teodor, Ursyn, Aleksander",
+                "11-10": "Lena, Just, Leon, Prokop",
+                "11-11": "Marcin, Bartłomiej, Teodor",
+                "11-12": "Renata, Witni, Jozafat",
+                "11-13": "Mikołaj, Stanisław, Eugeniusz",
+                "11-14": "Rogat, Serafin, Wawrzyniec",
+                "11-15": "Albert, Leopold, Idalia",
+                "11-16": "Gertruda, Edmund, Margaret",
+                "11-17": "Salomea, Grzegorz, Elżbieta",
+                "11-18": "Roman, Klaudyna, Tomasza",
+                "11-19": "Elżbieta, Seweryn, Maksyma",
+                "11-20": "Sedzymir, Anisjusz, Edmund",
+                "11-21": "Konrad, Damiana, Rrufus",
+                "11-22": "Cecylia, Markian, Filemon",
+                "11-23": "Klemens, Ada, Felicyta",
+                "11-24": "Flora, Emma, Chryzogon",
+                "11-25": "Katarzyna, Erazm, Lea",
+                "11-26": "Sylwester, Konrad, Delfina",
+                "11-27": "Walerian, Wirgiliusz, Maksyma",
+                "11-28": "Zdzisław, Stefan, Hospicjusz",
+                "11-29": "Saturnin, Radomir, Franciszek",
+                "11-30": "Andrzej, Maura, Konstanty"
+            },
+            en: {
+                "10-29": "Narcissus, Theodore, Ermelinda",
+                "10-30": "Cesar, Edmund, Zenobia",
+                "10-31": "Wolfgang, Quentin, Urban",
+                "11-1": "All Saints, Severin, Aldona",
+                "11-2": "All Souls, Eustace, Bohdan",
+                "11-3": "Hubert, Sylvia, Martin",
+                "11-4": "Charles, Olgierd, Modest",
+                "11-5": "Elizabeth, Zachary, Ziemowit",
+                "11-6": "Leonard, Felix, Leonardo",
+                "11-7": "Ernest, Florentine, Carina",
+                "11-8": "Godfrey, Severin, Victorin",
+                "11-9": "Theodore, Alexander, Ursyn",
+                "11-10": "Leon, Justus, Prokop",
+                "11-11": "Martin, Bartholomew, Theodore",
+                "11-12": "Renata, Christian, Josaphat",
+                "11-13": "Nicholas, Stanislaus, Eugene",
+                "11-14": "Seraphin, Lawrence, Rogat",
+                "11-15": "Albert, Leopold, Idalia",
+                "11-16": "Gertrude, Edmund, Margaret",
+                "11-17": "Salome, Gregory, Elizabeth",
+                "11-18": "Roman, Claudine, Thomas",
+                "11-19": "Elizabeth, Severin, Maxima",
+                "11-20": "Edmund, Octavio, Anisius",
+                "11-21": "Conrad, Damiana, Rufus",
+                "11-22": "Cecilia, Mark, Philemon",
+                "11-23": "Clement, Ada, Felicity",
+                "11-24": "Flora, Emma, Chrysogonus",
+                "11-25": "Catherine, Erasmus, Leah",
+                "11-26": "Sylvester, Conrad, Delphine",
+                "11-27": "Valerian, Virgil, Maxima",
+                "11-28": "Stefan, James, Hospicius",
+                "11-29": "Saturnin, Radomir, Francis",
+                "11-30": "Andrew, Maura, Constantine"
+            },
+            es: {
+                "10-29": "Narciso, Teodoro, Ermelinda",
+                "10-30": "César, Edmundo, Zenobia",
+                "10-31": "Wolfgang, Quintín, Urbano",
+                "11-1": "Todos los Santos, Severino",
+                "11-2": "Fieles Difuntos, Eustaquio",
+                "11-3": "Martín de Porres, Humberto",
+                "11-4": "Carlos Borromeo, Modesto",
+                "11-5": "Isabel, Zacarías, Ziemowit",
+                "11-6": "Leonardo, Félix, Severo",
+                "11-7": "Ernesto, Florentino, Carina",
+                "11-8": "Godofredo, Severino, Victorino",
+                "11-9": "Teodoro, Alejandro, Ursino",
+                "11-10": "León Magno, Justo, Procopio",
+                "11-11": "Martín de Tours, Bartolomé",
+                "11-12": "Renata, Christian, Josafat",
+                "11-13": "Nicolás, Estanislao, Eugenio",
+                "11-14": "Serafín, Lorenzo, Rogativo",
+                "11-15": "Alberto Magno, Leopoldo",
+                "11-16": "Gertrudis, Edmundo, Margarita",
+                "11-17": "Salomé, Gregorio, Isabel",
+                "11-18": "Román, Claudina, Tomás",
+                "11-19": "Isabel de Hungría, Severino",
+                "11-20": "Edmundo, Octavio, Anisio",
+                "11-21": "Conrado, Dámana, Rufo",
+                "11-22": "Cecilia, Marcos, Filemón",
+                "11-23": "Clemente, Ada, Felicidad",
+                "11-24": "Flora, Ema, Crisógono",
+                "11-25": "Catalina de Alejandría, Lea",
+                "11-26": "Silvestre, Conrado, Delfina",
+                "11-27": "Valeriano, Virgilio, Máxima",
+                "11-28": "Esteban, Santiago, Hospicio",
+                "11-29": "Saturnino, Radomir, Francisco",
+                "11-30": "Andrés apóstol, Maura"
+            },
+            fr: {
+                "10-29": "Narcisse, Théodore, Ermeline",
+                "10-30": "Bienvenue, Césaire, Edmond",
+                "10-31": "Quentin, Wolfgang, Urban",
+                "11-1": "Toussaint, Severin, Aldona",
+                "11-2": "Défunts, Eustache, Bohdan",
+                "11-3": "Hubert, Sylvie, Martin",
+                "11-4": "Charles, Olgierd, Modeste",
+                "11-5": "Élisabeth, Zacharie, Ziemowit",
+                "11-6": "Léonard, Félix, Leonardo",
+                "11-7": "Ernest, Florentin, Carina",
+                "11-8": "Geoffroy, Séverin, Victorin",
+                "11-9": "Théodore, Alexandre, Ursyn",
+                "11-10": "Léon, Juste, Prokop",
+                "11-11": "Martin, Barthélemy, Théodore",
+                "11-12": "Renée, Christian, Josaphat",
+                "11-13": "Nicolas, Stanislas, Eugène",
+                "11-14": "Séraphin, Laurent, Rogat",
+                "11-15": "Albert, Léopold, Idalia",
+                "11-16": "Gertrude, Edmund, Marguerite",
+                "11-17": "Salomé, Grégoire, Élisabeth",
+                "11-18": "Romain, Claudine, Thomas",
+                "11-19": "Élisabeth, Séverin, Maxima",
+                "11-20": "Edmond, Octave, Anisius",
+                "11-21": "Conrad, Damiane, Rufus",
+                "11-22": "Cécile, Marc, Philémon",
+                "11-23": "Clément, Ada, Félicité",
+                "11-24": "Flora, Emma, Chrysogone",
+                "11-25": "Catherine, Érasme, Léa",
+                "11-26": "Sylvestre, Conrad, Delphine",
+                "11-27": "Valérien, Virgile, Maxima",
+                "11-28": "Étienne, Jacques, Hospicius",
+                "11-29": "Saturnin, Radomir, François",
+                "11-30": "André, Maure, Constantin"
+            },
+            de: {
+                "10-29": "Narcissus, Theodor, Ermelinde",
+                "10-30": "Cäsar, Edmund, Zenobia",
+                "10-31": "Wolfgang, Quintin, Urban",
+                "11-1": "Allerheiligen, Severin",
+                "11-2": "Allerseelen, Eustachius",
+                "11-3": "Hubertus, Sylvia, Martin",
+                "11-4": "Karl, Olgierd, Modest",
+                "11-5": "Elisabeth, Zacharias, Ziemowit",
+                "11-6": "Leonhard, Felix, Leonardo",
+                "11-7": "Ernst, Florentine, Carina",
+                "11-8": "Gottfried, Severin, Victorin",
+                "11-9": "Theodor, Alexander, Ursyn",
+                "11-10": "Leo, Justus, Prokop",
+                "11-11": "Martin, Bartholomäus, Theodor",
+                "11-12": "Renate, Christian, Josaphat",
+                "11-13": "Nikolaus, Stanislaus, Eugen",
+                "11-14": "Seraphin, Lorenz, Rogat",
+                "11-15": "Albert, Leopold, Idalia",
+                "11-16": "Gertrud, Edmund, Margarete",
+                "11-17": "Salome, Gregor, Elisabeth",
+                "11-18": "Roman, Claudine, Thomas",
+                "11-19": "Elisabeth, Severin, Maxima",
+                "11-20": "Edmund, Oktavius, Anisius",
+                "11-21": "Konrad, Damiana, Rufus",
+                "11-22": "Cäcilia, Markus, Philemon",
+                "11-23": "Klemens, Ada, Felicitas",
+                "11-24": "Flora, Emma, Chrysogonus",
+                "11-25": "Katharina, Erasmus, Lea",
+                "11-26": "Silvester, Konrad, Delphine",
+                "11-27": "Valerian, Virgil, Maxima",
+                "11-28": "Stefan, Jakob, Hospicius",
+                "11-29": "Saturnin, Radomir, Franz",
+                "11-30": "Andreas, Maura, Konstantin"
+            }
+        };
+
+        const newsDatabase = {
+            pl: [
+                "<b>Polska / Świat:</b> Bank Centralny analizuje aktualne wskaźniki gospodarcze i kursy walut.",
+                "<b>Gospodarka:</b> Sektor technologiczny i IT notuje stabilny wzrost inwestycji w Europie.",
+                "<b>Technologia:</b> Nowe standardy transmisji danych mobilnych poprawiają jakość połączeń radiowych.",
+                "<b>Świat:</b> Globalne rynki finansowe skupiają się na najbliższych decyzjach banków centralnych."
+            ],
+            en: [
+                "<b>United Kingdom / World:</b> Central Bank reviews current economic indicators and currency rates.",
+                "<b>Economy:</b> The technology and IT sector registers stable investment growth across Europe.",
+                "<b>Technology:</b> New mobile data transmission standards improve radio streaming quality.",
+                "<b>World:</b> Global financial markets focus on upcoming central bank monetary decisions."
+            ],
+            es: [
+                "<b>España / Mundo:</b> El Banco Central analiza los indicadores económicos actuales y tipos de cambio.",
+                "<b>Economía:</b> El sector tecnológico y de TI registra un crecimiento estable de inversión en Europa.",
+                "<b>Tecnología:</b> Los nuevos estándares de transmisión de datos mejoran la calidad de radio.",
+                "<b>Mundo:</b> Los mercados financieros globales se centran en las próximas decisiones monetarias."
+            ],
+            fr: [
+                "<b>France / Monde :</b> La Banque Centrale analyse les indicateurs économiques actuels et taux de change.",
+                "<b>Économie :</b> Le secteur technologique et informatique enregistre une croissance stable en Europe.",
+                "<b>Technologie :</b> Les nouvelles normes de transmission de données améliorent la qualité audio.",
+                "<b>Monde :</b> Les marchés financiers mondiaux se centrent sur les décisions des banques centrales."
+            ],
+            de: [
+                "<b>Deutschland / Welt:</b> Die Zentralbank prüft aktuelle Wirtschaftsindikatoren und Wechselkurse.",
+                "<b>Wirtschaft:</b> Der Technologie- und IT-Sektor verzeichnet ein stabiles Investitionswachstum in Europa.",
+                "<b>Technologie:</b> Neue Standards für mobile Datenübertragung verbessern die Radio-Streaming-Qualität.",
+                "<b>Welt:</b> Die globalen Finanzmärkte konzentrieren sich auf kommende Notenbankentscheidungen."
+            ]
+        };
+
+        function updateNewsTickerForLanguage(langKey) {
+            let newsList = newsDatabase[langKey] || newsDatabase["en"];
+            const trackEl = document.getElementById('news-ticker-track');
+            let htmlContent = "";
+            newsList.forEach(news => {
+                htmlContent += `<span>${news}</span>`;
+            });
+            trackEl.innerHTML = htmlContent + htmlContent;
+        }
+
+        setInterval(() => {
+            updateNewsTickerForLanguage(currentLang);
+        }, 2 * 60 * 60 * 1000);
+
+        let audioCtx = null;
+        let analyser = null;
+        let audioSourceNode = null;
+        let dataArray = null;
+
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {
+                console.log("Wake Lock error:", err);
+            }
+        }
+
+        function initAudioAnalyzer() {
+            if (audioCtx) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 512; 
+                analyser.smoothingTimeConstant = 0.35; 
+                
+                audioSourceNode = audioCtx.createMediaElementSource(audioElement);
+                audioSourceNode.connect(analyser);
+                analyser.connect(audioCtx.destination);
+                
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+            } catch (e) {
+                console.log("CORS Auto-fallback active:", e);
+            }
+        }
+
+        function registerMediaSession(stationName) {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: stationName || 'Radio Live',
+                    artist: 'Smart Wall Dashboard',
+                    album: 'Live Radio Stream'
+                });
+                navigator.mediaSession.setActionHandler('play', () => togglePlay());
+                navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+            }
+        }
+
+        const translations = {
+            pl: {
+                nav_radio: "Radio", nav_weather: "Pogoda", nav_finance: "Finanse", nav_timer: "Czas", nav_info: "Info", nav_app: "App", nav_settings: "Ustawienia",
+                radio_title: "Odtwarzacz Radiowy", radio_subtitle: "Wybierz stację z listy lub dodaj własny link",
+                weather_title: "Prognoza Pogody (7 Dni)", weather_loc: "Lokalizacja", weather_today: "Dzisiaj",
+                finance_title: "Finanse, Waluty i Kryptowaluty", finance_subtitle: "Kursy na żywo z rozbiciem na Kupno (Bid) i Sprzedaż (Ask)",
+                fin_currencies: "Główne Waluty (kliknij strzałki, aby odwrócić kierunek):", fin_cryptos: "Kryptowaluty (Top 3):",
+                bid_label: "Kupno (Bid)", ask_label: "Sprzedaż (Ask)",
+                time_title: "Narzędzia Czasu", time_subtitle: "Wybierz minutnik, stoper lub ustaw budzik",
+                mode_timer: "Minutnik", mode_stopwatch: "Stoper", mode_alarm: "Budzik",
+                timer_ready: "Gotowy do ustawienia", timer_running: "Odliczanie w toku...", timer_paused: "Zatrzymany", timer_finished: "ALARM! Czas minął!",
+                stopwatch_ready: "Mierzenie czasu", stopwatch_running: "Stoper w toku...", stopwatch_paused: "Stoper zatrzymany",
+                alarm_hint: "Ustaw godzinę alarmu:", alarm_set: "Włącz budzik", alarm_on: "Budzik aktywny na", alarm_triggered: "BUDZIK! Wstawaj!", alarm_inactive: "Budzik nieaktywny",
+                btn_start: "Start", btn_pause: "Pauza", btn_reset: "Reset", btn_lap: "Okrążenie", btn_search: "Szukaj", timer_adjust_hint: "Szybka zmiana czasu (+ / -):",
+                status_stopped: "STOPPED", status_live: "LIVE STREAMING", paused: "PAUSE", connecting: "ŁĄCZENIE / RECONNECTING...",
+                info_title: "O projekcie", info_subtitle: "Dowiedz się więcej o aplikacji i jej działaniu",
+                info_h1: "Czym jest Smart Wall Dashboard?", info_p1: "To wszechstronny pulpit nawigacyjny stworzony z myślą o tabletach, inteligentnych ekranach ściennych oraz przeglądarkach. Łączy w sobie odtwarzacze radia online, aktualną pogodę, finanse i kursy walut na żywo, narzędzia czasu oraz zaawansowany wygaszacz ekranu z wiadomościami i imieninami.",
+                info_h2: "Projekt w fazie testów i rozwoju", info_p2: "Cały system jest stale rozwijany i testowany (Beta). Regularnie wprowadzamy ulepszenia, optymalizujemy działanie strumieni radiowych oraz dodajemy nowe funkcje na podstawie opinii użytkowników.",
+                info_h3: "Jak dodawać własne stacje radiowe?", info_p3: "W zakładce Radio znajdziesz sekcję „Dodaj stację ręcznie”. Aby dodać ulubioną stację:",
+                info_li1: "Wpisz własną nazwę stacji.", info_li2: "Wklej bezpośredni adres URL strumienia audio (musi to być bezpośredni link do pliku MP3/AAC/Stream zaczynający się od https://).", info_li3: "Kliknij przycisk dodawania – stacja natychmiast trafi na Twoją osobistą listę ulubionych.",
+                app_tab_title: "Smart Wall Dashboard - Aplikacja", app_tab_sub: "Pobierz plik instalacyjny dla systemu Android",
+                android_title: "Android / APK", btn_install_android: "Pobierz MyRadiooo.apk", dl_counter_text: "Pobrań aplikacji:",
+                settings_title: "Ustawienia", settings_subtitle: "Wybierz miasto, motyw i język",
+                settings_city_label: "Wpisz miasto (np. Warszawa, Livingston, Barcelona):", settings_city_placeholder: "Wpisz miasto...",
+                settings_lang_label: "Język aplikacji (Language):", settings_theme_label: "Motyw Kolorystyczny (10 opcji):",
+                settings_eq_label: "Wizualizator Equalizera (Wygaszacz):",
+                theme_1: "1. Fioletowy Zmierzch", theme_2: "2. Złoty Bursztyn", theme_3: "3. Szmaragdowa Zieleń", theme_4: "4. Cyberpunk Neon Blue",
+                theme_5: "5. Rubinowa Czerwień", theme_6: "6. Zachód Słońca", theme_7: "7. Arktyczny Błękit", theme_8: "8. Matrix Green",
+                theme_9: "9. Różowy Kwarc", theme_10: "10. Minimalistyczny Szary",
+                w_sun: "Słonecznie", w_cloud: "Zachmurzenie", w_fog: "Mgła", w_rain: "Deszcz", w_snow: "Śnieg", w_storm: "Burza", wind_label: "Wiatr", humidity_label: "Wilgotność",
+                region_name: "Szkocja", saver_hourly_title: "Pogoda na najbliższe 6 godzin:",
+                no_station_title: "Brak stacji", no_station_sub: "Wybierz stację z listy powyżej",
+                news_badge_label: "WIADOMOŚCI", footer_visits: "Odwiedzin",
+                quote_prefix: "Cytat dnia: ", nameday_prefix: "Imieniny dzisiaj: "
+            },
+            en: {
+                nav_radio: "Radio", nav_weather: "Weather", nav_finance: "Finance", nav_timer: "Time", nav_info: "Info", nav_app: "App", nav_settings: "Settings",
+                radio_title: "Radio Player", radio_subtitle: "Select a station from the list or add custom link",
+                weather_title: "7-Day Weather Forecast", weather_loc: "Location", weather_today: "Today",
+                finance_title: "Finance, Currencies & Cryptocurrencies", finance_subtitle: "Live rates with Bid and Ask spreads",
+                fin_currencies: "Main Currencies (click arrows to reverse direction):", fin_cryptos: "Cryptocurrencies (Top 3):",
+                bid_label: "Bid", ask_label: "Ask",
+                time_title: "Time Tools", time_subtitle: "Select timer, stopwatch or set alarm",
+                mode_timer: "Timer", mode_stopwatch: "Stopwatch", mode_alarm: "Alarm",
+                timer_ready: "Ready to set", timer_running: "Countdown running...", timer_paused: "Paused", timer_finished: "ALARM! Time's up!",
+                stopwatch_ready: "Stopwatch ready", stopwatch_running: "Stopwatch running...", stopwatch_paused: "Stopwatch paused",
+                alarm_hint: "Set alarm time:", alarm_set: "Turn on alarm", alarm_on: "Alarm active for", alarm_triggered: "ALARM! Wake up!", alarm_inactive: "Alarm inactive",
+                btn_start: "Start", btn_pause: "Pause", btn_reset: "Reset", btn_lap: "Lap", btn_search: "Search", timer_adjust_hint: "Quick time adjust (+ / -):",
+                status_stopped: "STOPPED", status_live: "LIVE STREAMING", paused: "PAUSE", connecting: "CONNECTING / RECONNECTING...",
+                info_title: "About Project", info_subtitle: "Learn more about the app and how it works",
+                info_h1: "What is Smart Wall Dashboard?", info_p1: "It is an all-in-one dashboard designed for tablets, smart wall displays, and browsers. It combines online radio players, live weather, live finance and currency rates, time tools, and an advanced screensaver with news and name days.",
+                info_h2: "Project in Testing & Development", info_p2: "The entire system is continuously being developed and tested (Beta). We regularly introduce improvements, optimize radio streams, and add new features based on user feedback.",
+                info_h3: "How to add custom radio stations?", info_p3: "In the Radio tab, you will find the 'Add station manually' section. To add your favorite station:",
+                info_li1: "Type a custom station name.", info_li2: "Paste the direct audio stream URL (must be a direct link to MP3/AAC/Stream starting with https://).", info_li3: "Click the add button – the station will instantly appear in your personal favorites list.",
+                app_tab_title: "Smart Wall Dashboard - App", app_tab_sub: "Download installation file for Android",
+                android_title: "Android / APK", btn_install_android: "Download MyRadiooo.apk", dl_counter_text: "App downloads:",
+                settings_title: "Settings", settings_subtitle: "Select city, theme and language",
+                settings_city_label: "Enter city (e.g. London, Livingston, Barcelona):", settings_city_placeholder: "Type city...",
+                settings_lang_label: "App Language:", settings_theme_label: "Color Theme (10 options):",
+                settings_eq_label: "Equalizer Visualizer (Screensaver):",
+                theme_1: "1. Purple Twilight", theme_2: "2. Golden Amber", theme_3: "3. Emerald Green", theme_4: "4. Cyberpunk Neon Blue",
+                theme_5: "5. Ruby Red", theme_6: "6. Sunset Orange", theme_7: "7. Arctic Blue", theme_8: "8. Matrix Green",
+                theme_9: "9. Rose Quartz", theme_10: "10. Minimalist Gray",
+                w_sun: "Sunny", w_cloud: "Cloudy", w_fog: "Fog", w_rain: "Rain", w_snow: "Snow", w_storm: "Storm", wind_label: "Wind", humidity_label: "Humidity",
+                region_name: "Scotland", saver_hourly_title: "Next 6 hours forecast:",
+                no_station_title: "No station", no_station_sub: "Select a station from the list above",
+                news_badge_label: "NEWS", footer_visits: "Visits",
+                quote_prefix: "Quote of the day: ", nameday_prefix: "Name days today: "
+            },
+            es: {
+                nav_radio: "Radio", nav_weather: "Clima", nav_finance: "Finanzas", nav_timer: "Tiempo", nav_info: "Info", nav_app: "App", nav_settings: "Ajustes",
+                radio_title: "Reproductor de Radio", radio_subtitle: "Selecciona una emisora o añade un enlace",
+                weather_title: "Pronóstico del Clima (7 Días)", weather_loc: "Ubicación", weather_today: "Hoy",
+                finance_title: "Finanzas, Divisas y Criptomonedas", finance_subtitle: "Tipos de cambio en vivo con Bid y Ask",
+                fin_currencies: "Principales Divisas (clic en las flechas para invertir):", fin_cryptos: "Criptomonedas (Top 3):",
+                bid_label: "Compra (Bid)", ask_label: "Venta (Ask)",
+                time_title: "Herramientas de Tiempo", time_subtitle: "Selecciona temporizador, cronómetro o alarma",
+                mode_timer: "Temporizador", mode_stopwatch: "Cronómetro", mode_alarm: "Alarma",
+                timer_ready: "Listo para configurar", timer_running: "Cuenta atrás en curso...", timer_paused: "Pausado", timer_finished: "¡ALARMA! Tiempo terminado!",
+                stopwatch_ready: "Cronómetro listo", stopwatch_running: "Cronómetro en marcha...", stopwatch_paused: "Cronómetro en pausa",
+                alarm_hint: "Establecer hora de alarma:", alarm_set: "Activar alarma", alarm_on: "Alarma activa para", alarm_triggered: "¡ALARMA! ¡Despierta!", alarm_inactive: "Alarma inactiva",
+                btn_start: "Iniciar", btn_pause: "Pausa", btn_reset: "Reiniciar", btn_lap: "Vuelta", btn_search: "Buscar", timer_adjust_hint: "Ajuste rápido (+ / -):",
+                status_stopped: "STOPPED", status_live: "LIVE STREAMING", paused: "PAUSE", connecting: "CONECTANDO...",
+                info_title: "Acerca del Proyecto", info_subtitle: "Más información sobre la aplicación y cómo funciona",
+                info_h1: "¿Qué es Smart Wall Dashboard?", info_p1: "Es un panel multifuncional diseñado para tabletas, pantallas inteligentes de pared y navegadores. Combina radios online, clima en vivo, finanzas y tipos de cambio, herramientas de tiempo y un salvapantallas avanzado.",
+                info_h2: "Proyecto en fase de pruebas (Beta)", info_p2: "Todo el sistema está en constante desarrollo y pruebas. Mejoramos y optimizamos los flujos de radio y añadimos nuevas funciones regularmente.",
+                info_h3: "¿Cómo añadir emisoras de radio personalizadas?", info_p3: "En la pestaña Radio encontrarás la sección para añadir emisoras manualmente:",
+                info_li1: "Escribe el nombre de la emisora.", info_li2: "Pega la URL directa del flujo de audio (enlace directo a MP3/AAC que comience por https://).", info_li3: "Haz clic en añadir y la emisora aparecerá en tu lista.",
+                app_tab_title: "Smart Wall Dashboard - App", app_tab_sub: "Descargar archivo de instalación para Android",
+                android_title: "Android / APK", btn_install_android: "Descargar MyRadiooo.apk", dl_counter_text: "Descargas de la app:",
+                settings_title: "Ajustes", settings_subtitle: "Selecciona ciudad, tema e idioma",
+                settings_city_label: "Introduce ciudad (ej. Madrid, Livingston, Barcelona):", settings_city_placeholder: "Escribe ciudad...",
+                settings_lang_label: "Idioma de la aplicación:", settings_theme_label: "Tema de Color (10 opciones):",
+                settings_eq_label: "Visualizador Equalizador:",
+                theme_1: "1. Crepúsculo Morado", theme_2: "2. Ámbar Dorado", theme_3: "3. Verde Esmeralda", theme_4: "4. Cyberpunk Azul Neón",
+                theme_5: "5. Rojo Rubí", theme_6: "6. Naranja Atardecer", theme_7: "7. Azul Ártico", theme_8: "8. Verde Matrix",
+                theme_9: "9. Cuarzo Rosa", theme_10: "10. Gris Minimalista",
+                w_sun: "Soleado", w_cloud: "Nublado", w_fog: "Niebla", w_rain: "Lluvia", w_snow: "Nieve", w_storm: "Tormenta", wind_label: "Viento", humidity_label: "Humedad",
+                region_name: "Escocia", saver_hourly_title: "Pronóstico próximas 6 horas:",
+                no_station_title: "Sin emisora", no_station_sub: "Selecciona una emisora de la lista",
+                news_badge_label: "NOTICIAS", footer_visits: "Visitas",
+                quote_prefix: "Frase del día: ", nameday_prefix: "Santos de hoy: "
+            },
+            fr: {
+                nav_radio: "Radio", nav_weather: "Météo", nav_finance: "Finance", nav_timer: "Heure", nav_info: "Info", nav_app: "App", nav_settings: "Paramètres",
+                radio_title: "Lecteur Radio", radio_subtitle: "Sélectionnez une station ou ajoutez un lien",
+                weather_title: "Prévisions Météo (7 Jours)", weather_loc: "Emplacement", weather_today: "Aujourd'hui",
+                finance_title: "Finance, Devises et Cryptos", finance_subtitle: "Cours en direct avec Bid et Ask",
+                fin_currencies: "Devises principales (cliquez sur les flèches pour inverser) :", fin_cryptos: "Cryptomonnaies (Top 3) :",
+                bid_label: "Achat (Bid)", ask_label: "Vente (Ask)",
+                time_title: "Outils Horaires", time_subtitle: "Sélectionnez le minuteur, le chronomètre ou l'alarme",
+                mode_timer: "Minuteur", mode_stopwatch: "Chronomètre", mode_alarm: "Alarme",
+                timer_ready: "Prêt à démarrer", timer_running: "Compte à rebours en cours...", timer_paused: "En pause", timer_finished: "ALARME ! Temps écoulé !",
+                stopwatch_ready: "Chronomètre prêt", stopwatch_running: "Chronomètre en cours...", stopwatch_paused: "Chronomètre en pause",
+                alarm_hint: "Définir l'heure de l'alarme :", alarm_set: "Activer l'alarme", alarm_on: "Alarme active pour", alarm_triggered: "ALARME ! Réveillez-vous !", alarm_inactive: "Alarme inactive",
+                btn_start: "Démarrer", btn_pause: "Pause", btn_reset: "Réinitialiser", btn_lap: "Tour", btn_search: "Chercher", timer_adjust_hint: "Ajustement rapide (+ / -) :",
+                status_stopped: "STOPPED", status_live: "LIVE STREAMING", paused: "PAUSE", connecting: "CONNEXION EN COURS...",
+                info_title: "À propos du projet", info_subtitle: "En savoir plus sur l'application et son fonctionnement",
+                info_h1: "Qu'est-ce que Smart Wall Dashboard ?", info_p1: "C'est un tableau de bord complet conçu pour les tablettes, écrans muraux et navigateurs. Il combine radios en ligne, météo en direct, finances, outils horaires et un économiseur d'écran avancé.",
+                info_h2: "Projet en phase de test (Beta)", info_p2: "Le système est en constante évolution. Nous améliorons régulièrement les flux radio et ajoutons de nouvelles fonctionnalités.",
+                info_h3: "Comment ajouter ses propres stations radio ?", info_p3: "Dans l'onglet Radio, utilisez la section d'ajout manuel :",
+                info_li1: "Entrez le nom de la station.", info_li2: "Collez l'URL directe du flux audio (lien direct MP3/AAC commençant par https://).", info_li3: "Cliquez sur ajouter pour l'inclure dans vos favoris.",
+                app_tab_title: "Smart Wall Dashboard - App", app_tab_sub: "Télécharger le fichier d'installation pour Android",
+                android_title: "Android / APK", btn_install_android: "Télécharger MyRadiooo.apk", dl_counter_text: "Téléchargements de l'app :",
+                settings_title: "Paramètres", settings_subtitle: "Sélectionnez la ville, le thème et la langue",
+                settings_city_label: "Entrez la ville (ex. Paris, Livingston, Barcelona) :", settings_city_placeholder: "Entrez la ville...",
+                settings_lang_label: "Langue de l'application :", settings_theme_label: "Thème de couleur (10 options) :",
+                settings_eq_label: "Égaliseur visuel :",
+                theme_1: "1. Crépuscule Violet", theme_2: "2. Ambre Doré", theme_3: "3. Vert Émeraude", theme_4: "4. Cyberpunk Bleu Néon",
+                theme_5: "5. Rouge Rubis", theme_6: "6. Orange Coucher de soleil", theme_7: "7. Bleu Arctique", theme_8: "8. Vert Matrix",
+                theme_9: "9. Quartz Rose", theme_10: "10. Minimalist Gray",
+                w_sun: "Ensoleillé", w_cloud: "Nuageux", w_fog: "Brouillard", w_rain: "Pluie", w_snow: "Neige", w_storm: "Orage", wind_label: "Vent", humidity_label: "Humidité",
+                region_name: "Écosse", saver_hourly_title: "Prévisions des 6 prochaines heures :",
+                no_station_title: "Aucune station", no_station_sub: "Sélectionnez une station ci-dessus",
+                news_badge_label: "ACTUALITÉS", footer_visits: "Visites",
+                quote_prefix: "Citation du jour : ", nameday_prefix: "Fêtes du jour : "
+            },
+            de: {
+                nav_radio: "Radio", nav_weather: "Wetter", nav_finance: "Finanzen", nav_timer: "Zeit", nav_info: "Info", nav_app: "App", nav_settings: "Einstellungen",
+                radio_title: "Radio-Player", radio_subtitle: "Wählen Sie einen Sender oder fügen Sie einen Link hinzu",
+                weather_title: "7-Tage-Wettervorhersage", weather_loc: "Standort", weather_today: "Heute",
+                finance_title: "Finanzen, Währungen & Kryptos", finance_subtitle: "Live-Kurse mit Bid- und Ask-Spanne",
+                fin_currencies: "Hauptwährungen (Pfeile klicken zum Umkehren):", fin_cryptos: "Kryptowährungen (Top 3):",
+                bid_label: "Kauf (Bid)", ask_label: "Verkauf (Ask)",
+                time_title: "Zeit-Tools", time_subtitle: "Timer, Stoppuhr oder Wecker auswählen",
+                mode_timer: "Minutenzähler", mode_stopwatch: "Stoppuhr", mode_alarm: "Wecker",
+                timer_ready: "Bereit zum Einstellen", timer_running: "Countdown läuft...", timer_paused: "Pausiert", timer_finished: "ALARM! Zeit ist um!",
+                stopwatch_ready: "Stoppuhr bereit", stopwatch_running: "Stoppuhr läuft...", stopwatch_paused: "Stoppuhr pausiert",
+                alarm_hint: "Weckzeit einstellen:", alarm_set: "Wecker einschalten", alarm_on: "Wecker aktiv für", alarm_triggered: "ALARM! Aufwachen!", alarm_inactive: "Wecker inaktiv",
+                btn_start: "Start", btn_pause: "Pause", btn_reset: "Zurücksetzen", btn_lap: "Runde", btn_search: "Suchen", timer_adjust_hint: "Schnelleinstellung (+ / -):",
+                status_stopped: "STOPPED", status_live: "LIVE STREAMING", paused: "PAUSE", connecting: "VERBINDUNG LÄUFT...",
+                info_title: "Über das Projekt", info_subtitle: "Erfahren Sie mehr über die App und ihre Funktionsweise",
+                info_h1: "Was ist Smart Wall Dashboard?", info_p1: "Es ist ein vielseitiges Dashboard für Tablets, Wanddisplays und Browser. Es vereint Online-Radios, Live-Wetter, Finanzen, Zeit-Tools und einen erweiterten Bildschirmschoner.",
+                info_h2: "Projekt in Testphase (Beta)", info_p2: "Das System wird kontinuierlich weiterentwickelt und getestet. Wir optimieren Radiostreams und fügen neue Funktionen hinzu.",
+                info_h3: "Wie fügt man eigene Radiosender hinzu?", info_p3: "Im Radio-Tab finden Sie den Bereich zum manuellen Hinzufügen:",
+                info_li1: "Geben Sie den Namen des Senders ein.", info_li2: "Fügen Sie die direkte Stream-URL ein (MP3/AAC-Direktlink beginnend mit https://).", info_li3: "Klicken Sie auf Hinzufügen, um ihn zu speichern.",
+                app_tab_title: "Smart Wall Dashboard - App", app_tab_sub: "Installationsdatei für Android herunterladen",
+                android_title: "Android / APK", btn_install_android: "MyRadiooo.apk herunterladen", dl_counter_text: "App-Downloads:",
+                settings_title: "Einstellungen", settings_subtitle: "Stadt, Design und Sprache auswählen",
+                settings_city_label: "Stadt eingeben (z.B. Berlin, Livingston, Barcelona):", settings_city_placeholder: "Stadt eingeben...",
+                settings_lang_label: "App-Sprache:", settings_theme_label: "Farbdesign (10 Optionen):",
+                settings_eq_label: "Equalizer Visualisierer:",
+                theme_1: "1. Violette Dämmerung", theme_2: "2. Goldener Amber", theme_3: "3. Smaragdgrün", theme_4: "4. Cyberpunk Neonblau",
+                theme_5: "5. Rubinrot", theme_6: "6. Sonnenuntergang", theme_7: "7. Arktisblau", theme_8: "8. Matrix Grün",
+                theme_9: "9. Rosenquarz", theme_10: "10. Minimalistisches Grau",
+                w_sun: "Sonnig", w_cloud: "Wolkig", w_fog: "Nebel", w_rain: "Regen", w_snow: "Schnee", w_storm: "Sturm", wind_label: "Wind", humidity_label: "Luftfeuchtigkeit",
+                region_name: "Schottland", saver_hourly_title: "Vorhersage für die nächsten 6 Stunden:",
+                no_station_title: "Kein Sender", no_station_sub: "Wählen Sie einen Sender aus der Liste",
+                news_badge_label: "NACHRICHTEN", footer_visits: "Besuche",
+                quote_prefix: "Zitat des Tages: ", nameday_prefix: "Namenstage heute: "
+            }
+        };
+
+        let financePairs = [
+            { id: 'gbp', base: 'GBP', quote: 'PLN', inverted: false, rate: 5.1040, bid: 5.1020, ask: 5.1065, icon: 'fa-sterling-sign' },
+            { id: 'usd', base: 'USD', quote: 'PLN', inverted: false, rate: 3.9624, bid: 3.9605, ask: 3.9645, icon: 'fa-dollar-sign' },
+            { id: 'eur', base: 'EUR', quote: 'PLN', inverted: false, rate: 4.3120, bid: 4.3100, ask: 4.3145, icon: 'fa-euro-sign' },
+            { id: 'chf', base: 'CHF', quote: 'PLN', inverted: false, rate: 4.5820, bid: 4.5795, ask: 4.5845, icon: 'fa-franc-sign' }
+        ];
+
+        function changeLanguage(langKey) {
+            currentLang = translations[langKey] ? langKey : 'en';
+            localStorage.setItem('dash_lang', currentLang);
+            document.getElementById('lang-select').value = currentLang;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    el.innerText = translations[currentLang][key];
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[currentLang][key]) {
+                    el.placeholder = translations[currentLang][key];
+                }
+            });
+
+            if (typeof savedCityObj !== 'undefined') {
+                fetchWeatherForCityObj(savedCityObj);
+            }
+            updateClock();
+            updatePlayUI(isPlaying);
+            updateTimerUI();
+            updateStopwatchUI();
+            renderFinanceData();
+            updateRotateContent();
+            updateNewsTickerForLanguage(currentLang);
+        }
+
+        const themes = {
+            purple: { accent: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.4)' },
+            amber: { accent: '#f59e0b', glow: 'rgba(245, 158, 11, 0.4)' },
+            emerald: { accent: '#10b981', glow: 'rgba(16, 185, 129, 0.4)' },
+            cyber: { accent: '#06b6d4', glow: 'rgba(6, 182, 212, 0.4)' },
+            ruby: { accent: '#ef4444', glow: 'rgba(239, 68, 68, 0.4)' },
+            sunset: { accent: '#f97316', glow: 'rgba(249, 115, 22, 0.4)' },
+            arctic: { accent: '#3b82f6', glow: 'rgba(59, 130, 246, 0.4)' },
+            matrix: { accent: '#22c55e', glow: 'rgba(34, 197, 94, 0.4)' },
+            rose: { accent: '#f43f5e', glow: 'rgba(244, 63, 94, 0.4)' },
+            monochrome: { accent: '#e2e8f0', glow: 'rgba(226, 232, 240, 0.4)' }
+        };
+
+        function changeTheme(themeKey) {
+            const t = themes[themeKey] || themes.purple;
+            document.documentElement.style.setProperty('--accent', t.accent);
+            document.documentElement.style.setProperty('--accent-glow', t.glow);
+            localStorage.setItem('dash_theme', themeKey);
+        }
+
+        let equalizerStyle = localStorage.getItem('dash_eq') || '1';
+
+        function changeEqualizerStyle(styleVal) {
+            equalizerStyle = styleVal;
+            localStorage.setItem('dash_eq', styleVal);
+            buildEqualizerHtml();
+        }
+
+        function buildEqualizerHtml() {
+            const box = document.getElementById('visualizer-box');
+            box.innerHTML = '';
+            if (equalizerStyle === 'off') {
+                box.style.display = 'none';
+                return;
+            }
+            box.style.display = 'flex';
+
+            let html = `<div class="eq-box" id="eq-inner-grid">`;
+            for(let i=0; i<8; i++) {
+                html += `<div class="eq-bar" id="eq-bar-${i}"></div>`;
+            }
+            html += `</div>`;
+            box.innerHTML = html;
+        }
+
+        setInterval(() => {
+            if (!isPlaying) return;
+            
+            let frequencies = [0, 0, 0, 0, 0, 0, 0, 0];
+
+            if (analyser && dataArray) {
+                analyser.getByteFrequencyData(dataArray);
+                
+                const bandIndices = [
+                    [1, 3], [4, 8], [9, 16], [17, 30],
+                    [31, 50], [51, 75], [76, 110], [111, 150]
+                ];
+                const bandGains = [1.5, 1.3, 1.8, 2.4, 2.2, 1.9, 2.5, 3.2];
+
+                let maxVal = 1;
+                let minVal = 255;
+
+                for(let i = 0; i < 8; i++) {
+                    let sum = 0;
+                    let count = 0;
+                    let start = bandIndices[i][0];
+                    let end = bandIndices[i][1];
+                    
+                    for(let j = start; j <= end && j < dataArray.length; j++) {
+                        sum += dataArray[j];
+                        count++;
+                    }
+                    
+                    let avg = count > 0 ? sum / count : 0;
+                    let rawVal = avg * bandGains[i];
+                    frequencies[i] = rawVal;
+
+                    if (rawVal > maxVal) maxVal = rawVal;
+                    if (rawVal < minVal) minVal = rawVal;
+                }
+
+                for(let i = 0; i < 8; i++) {
+                    let norm = (frequencies[i] - minVal) / (maxVal - minVal + 1);
+                    frequencies[i] = Math.max(0.05, Math.min(1, norm));
+                }
+            } else {
+                let time = Date.now() / 120;
+                for(let i = 0; i < 8; i++) {
+                    frequencies[i] = Math.abs(Math.sin(time + i * 0.5));
+                }
+            }
+
+            for(let i = 0; i < 8; i++) {
+                const el = document.getElementById(`eq-bar-${i}`);
+                if(!el) continue;
+                
+                let normVal = frequencies[i] || 0.1;
+                let h = Math.floor(normVal * 22) + 4;
+                el.style.height = h + 'px';
+
+                if (equalizerStyle === '1') {
+                    if (h > 16) el.style.background = '#ef4444';
+                    else if (h > 9) el.style.background = '#f59e0b';
+                    else el.style.background = '#22c55e';
+                } else if (equalizerStyle === '2') {
+                    el.style.background = '#06b6d4';
+                } else if (equalizerStyle === '3') {
+                    el.style.background = i % 2 === 0 ? '#d946ef' : '#8b5cf6';
+                } else if (equalizerStyle === '4') {
+                    el.style.background = '#22c55e';
+                } else if (equalizerStyle === '5') {
+                    el.style.background = '#f59e0b';
+                } else if (equalizerStyle === '6') {
+                    el.style.background = '#10b981';
+                } else if (equalizerStyle === '7') {
+                    el.style.background = (i % 2 === 0) ? '#ffffff' : '#3b82f6';
+                } else if (equalizerStyle === '8') {
+                    el.style.background = '#dc2626';
+                } else if (equalizerStyle === '9') {
+                    el.style.background = '#60a5fa';
+                } else if (equalizerStyle === '10') {
+                    const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4', '#f43f5e', '#10b981'];
+                    el.style.background = colors[i % colors.length];
+                }
+            }
+        }, 30);
+
+        let customStations = JSON.parse(localStorage.getItem('dash_custom_stations') || 'null') || [
+            { id: 'def_1', name: 'RMF FM', url: 'https://go-audio.toya.net.pl/63220' },
+            { id: 'def_2', name: 'Radio ZET', url: 'https://zt02.cdn.eurozet.pl/zet-old.mp3?redirected=02' },
+            { id: 'def_3', name: 'Eska Rock', url: 'https://waw.ic.smcdn.pl/2100-1.mp3' },
+            { id: 'def_4', name: 'Radio Plus', url: 'https://ic1.smcdn.pl/4990-1.mp3' },
+            { id: 'def_5', name: 'Radio Tok FM', url: 'https://radiostream.pl/tuba10-1.mp3#TOK_FM' },
+            { id: 'def_6', name: 'Radio ESKA 2', url: 'https://waw.ic.smcdn.pl/1100-1.mp3' },
+            { id: 'def_7', name: 'Vox FM', url: 'https://ic2.smcdn.pl/3990-1.mp3' },
+            { id: 'def_8', name: 'RMF - Classic', url: 'https://rs201-krk-cyfronet.rmfstream.pl/rmf_classic' },
+            { id: 'def_9', name: 'Chilli ZET FM', url: 'https://ch01.cdn.eurozet.pl/chi-kat.mp3' },
+            { id: 'def_10', name: 'Radio Parada', url: 'https://stream4.nadaje.com:15275/live' },
+            { id: 'def_11', name: 'Antyradio', url: 'https://an02.cdn.eurozet.pl/ant-web.mp3' },
+            { id: 'def_12', name: 'Vox - Disco 90', url: 'https://ic1.smcdn.pl/6170-1.mp3' },
+            { id: 'def_13', name: 'Radio Jura', url: 'https://srv0.streamradiowy.eu/radiojura' },
+            { id: 'def_14', name: 'Radio Złote Przeboje', url: 'https://radiostream.pl/tuba8918-1.mp3' },
+            { id: 'def_15', name: 'RMF Maxxx', url: 'https://rs202-krk-cyfronet.rmfstream.pl/rmf_maxxx?skey=1616600473' },
+            { id: 'def_16', name: 'Radio ESKA', url: 'https://go-audio.toya.net.pl/63222' },
+            { id: 'def_17', name: 'Eska - Gorąca 20', url: 'https://waw.ic.smcdn.pl/6130-1.mp3' },
+            { id: 'def_18', name: 'Eska - Hity na Czasie', url: 'https://waw.ic.smcdn.pl/2980-1.mp3' },
+            { id: 'def_19', name: 'Eska - Impreska', url: 'https://waw.ic.smcdn.pl/6030-1.mp3' },
+            { id: 'def_20', name: 'Radioparty - Energy 2000', url: 'https://forum.radioparty.pl:8035/energy2000' },
+            { id: 'def_21', name: 'Radioparty - Kanal Główny', url: 'https://s2.radioparty.pl:8000/stream' },
+            { id: 'def_22', name: 'Vibe FM', url: 'https://ic2.smcdn.pl/6490-1.mp3' },
+            { id: 'def_23', name: 'Vox - Best Lista', url: 'https://waw.ic.smcdn.pl/6100-1.mp3' },
+            { id: 'def_24', name: 'Vox - Dance', url: 'https://ic1.smcdn.pl/6180-1.mp3' },
+            { id: 'def_25', name: 'Vox - Disco Polska', url: 'https://waw.ic.smcdn.pl/6080-1.mp3' },
+            { id: 'def_26', name: 'Vox - DJ Mix', url: 'https://waw.ic.smcdn.pl/6020-1.mp3' }
+        ];
+        let stations = customStations;
+        let currentStation = stations.length > 0 ? stations[0] : null;
+
+        function enforceHttps(url) {
+            if (!url) return '';
+            if (url.startsWith('http://')) {
+                return url.replace('http://', 'https://');
+            }
+            return url;
+        }
+
+        function initStations() {
+            stations = customStations;
+            const container = document.getElementById('station-list-container');
+            container.innerHTML = '';
+            
+            if (stations.length === 0) {
+                const t = translations[currentLang];
+                container.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:15px;">${t.no_station_sub || 'Brak stacji na liście.'}</div>`;
+                return;
+            }
+
+            stations.forEach((st, index) => {
+                const row = document.createElement('div');
+                row.className = 'station-row';
+
+                const btn = document.createElement('div');
+                btn.className = `station-btn ${currentStation && currentStation.id === st.id ? 'playing' : ''}`;
+                btn.innerHTML = `
+                    <div style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <div style="font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis;">${st.name}</div>
+                    </div>
+                    <i class="fa-solid fa-play" style="font-size: 10px; flex-shrink: 0; margin-left: 6px;"></i>
+                `;
+                btn.onclick = () => {
+                    selectStation(st);
+                    playStreamUrl(st.url);
+                };
+                row.appendChild(btn);
+
+                const moveGroup = document.createElement('div');
+                moveGroup.className = 'station-move-group';
+                
+                const upBtn = document.createElement('button');
+                upBtn.className = 'btn-move-station';
+                upBtn.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+                upBtn.title = "Przesuń wyżej";
+                upBtn.disabled = index === 0;
+                if (index === 0) upBtn.style.opacity = '0.3';
+                upBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    moveStation(index, -1);
+                };
+                moveGroup.appendChild(upBtn);
+
+                const downBtn = document.createElement('button');
+                downBtn.className = 'btn-move-station';
+                downBtn.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+                downBtn.title = "Przesuń niżej";
+                downBtn.disabled = index === stations.length - 1;
+                if (index === stations.length - 1) downBtn.style.opacity = '0.3';
+                downBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    moveStation(index, 1);
+                };
+                moveGroup.appendChild(downBtn);
+
+                row.appendChild(moveGroup);
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn-delete-station';
+                delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+                delBtn.title = "Usuń stację";
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeStation(st.id);
+                };
+                row.appendChild(delBtn);
+
+                container.appendChild(row);
+            });
+        }
+
+        function moveStation(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= customStations.length) return;
+            
+            const temp = customStations[index];
+            customStations[index] = customStations[newIndex];
+            customStations[newIndex] = temp;
+
+            localStorage.setItem('dash_custom_stations', JSON.stringify(customStations));
+            initStations();
+        }
+
+        function selectStation(st) {
+            currentStation = st;
+            initStations();
+            document.getElementById('current-station-title').innerText = st.name;
+            document.getElementById('saver-station-name').innerText = st.name;
+        }
+
+        async function playStreamUrl(rawUrl) {
+            if (isConnecting) return;
+            isConnecting = true;
+
+            try {
+                audioElement.pause();
+                audioElement.src = '';
+                audioElement.load();
+
+                let streamUrl = enforceHttps(rawUrl);
+                audioElement.src = streamUrl.includes('?') ? streamUrl + '&_t=' + Date.now() : streamUrl + '?_t=' + Date.now();
+                
+                initAudioAnalyzer();
+                requestWakeLock();
+
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    await audioCtx.resume();
+                }
+
+                await audioElement.play();
+                isPlaying = true;
+                isUserPaused = false;
+                updatePlayUI(true);
+                registerMediaSession(currentStation ? currentStation.name : 'Radio Live');
+            } catch (err) {
+                console.log("Audio play error / reconnecting:", err);
+                isPlaying = false;
+                updatePlayUI(false);
+                if (!isUserPaused) {
+                    setTimeout(() => {
+                        isConnecting = false;
+                        autoReconnectStream();
+                    }, 1500);
+                    return;
+                }
+            }
+            isConnecting = false;
+        }
+
+        function togglePlay() {
+            if (!currentStation) return;
+            if (!isPlaying) {
+                isUserPaused = false;
+                playStreamUrl(currentStation.url);
+            } else {
+                isUserPaused = true;
+                isConnecting = false;
+                audioElement.pause();
+                audioElement.src = '';
+                isPlaying = false;
+                updatePlayUI(false);
+                if (wakeLock) {
+                    wakeLock.release().catch(() => {});
+                    wakeLock = null;
+                }
+            }
+        }
+
+        let reconnectTimer = null;
+        function autoReconnectStream() {
+            if (isUserPaused || isConnecting || !currentStation) return;
+            
+            const statusFooter = document.getElementById('footer-radio-status');
+            const connectingLabel = translations[currentLang].connecting || 'CONNECTING...';
+            statusFooter.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin" style="color:#f59e0b;"></i> ${connectingLabel}`;
+
+            if (reconnectTimer) clearTimeout(reconnectTimer);
+
+            reconnectTimer = setTimeout(() => {
+                if (!isUserPaused && currentStation) {
+                    let retryUrl = currentStation.url + (currentStation.url.includes('?') ? '&retry=' : '?retry=') + Date.now();
+                    playStreamUrl(retryUrl);
+                }
+            }, 1500);
+        }
+
+        window.addEventListener('online', () => {
+            if (!isUserPaused) autoReconnectStream();
+        });
+
+        audioElement.addEventListener('error', () => {
+            if (!isUserPaused) autoReconnectStream();
+        });
+        audioElement.addEventListener('stalled', () => {
+            if (!isUserPaused) autoReconnectStream();
+        });
+        audioElement.addEventListener('ended', () => {
+            if (!isUserPaused) autoReconnectStream();
+        });
+
+        function updatePlayUI(playing) {
+            const playIcon = document.getElementById('play-icon');
+            const vinyl = document.getElementById('vinyl');
+            const statusFooter = document.getElementById('footer-radio-status');
+            const saverStatus = document.getElementById('saver-station-status');
+
+            const liveLabel = translations[currentLang].status_live || 'LIVE STREAMING';
+            const pauseLabel = translations[currentLang].paused || 'PAUSE';
+
+            if (playing) {
+                if (playIcon) playIcon.className = 'fa-solid fa-pause';
+                vinyl.classList.add('spinning');
+                statusFooter.innerHTML = `<i class="fa-solid fa-circle-play" style="color:#22c55e;"></i> ${currentStation ? currentStation.name : 'Radio'} • ${liveLabel}`;
+                saverStatus.innerHTML = `<i class="fa-solid fa-circle-play" style="color:#22c55e;"></i> ${liveLabel}`;
+            } else {
+                if (playIcon) playIcon.className = 'fa-solid fa-play';
+                vinyl.classList.remove('spinning');
+                statusFooter.innerHTML = `<i class="fa-solid fa-circle-pause" style="color:#ef4444;"></i> ${pauseLabel}`;
+                saverStatus.innerHTML = `<i class="fa-solid fa-circle-pause" style="color:#ef4444;"></i> ${pauseLabel}`;
+            }
+        }
+
+        function adjustVolume(delta) {
+            audioElement.volume = Math.min(1, Math.max(0, audioElement.volume + delta));
+        }
+
+        function addManualStation() {
+            const nameInput = document.getElementById('manual-station-name');
+            const urlInput = document.getElementById('manual-station-url');
+            
+            const name = nameInput.value.trim();
+            const url = urlInput.value.trim();
+
+            if (!name || !url) {
+                alert('Wpisz nazwę stacji oraz link do strumienia!');
+                return;
+            }
+
+            const newStation = { id: 'manual_' + Date.now(), name: name, url: url };
+            customStations.push(newStation);
+            localStorage.setItem('dash_custom_stations', JSON.stringify(customStations));
+
+            nameInput.value = '';
+            urlInput.value = '';
+
+            initStations();
+            selectStation(newStation);
+            playStreamUrl(newStation.url);
+        }
+
+        function removeStation(stationId) {
+            customStations = customStations.filter(st => st.id !== stationId);
+            localStorage.setItem('dash_custom_stations', JSON.stringify(customStations));
+            stations = customStations;
+
+            if (currentStation && currentStation.id === stationId) {
+                if (stations.length > 0) {
+                    selectStation(stations[0]);
+                } else {
+                    currentStation = null;
+                    audioElement.pause();
+                    audioElement.src = '';
+                    isPlaying = false;
+                    updatePlayUI(false);
+                    const t = translations[currentLang];
+                    document.getElementById('current-station-title').innerText = t.no_station_title || "No station";
+                    document.getElementById('saver-station-name').innerText = t.no_station_title || "No station";
+                    initStations();
+                }
+            } else {
+                initStations();
+            }
+        }
+
+        function toggleCurrencySwap(index) {
+            financePairs[index].inverted = !financePairs[index].inverted;
+            renderFinanceData();
+        }
+
+        async function fetchLiveFinances() {
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=pln,gbp,usd');
+                const data = await res.json();
+                
+                if (data.bitcoin) {
+                    window.cryptoData = [
+                        { name: 'Bitcoin (BTC)', pricePLN: data.bitcoin.pln, icon: 'fa-bitcoin', change: '+2.4%' },
+                        { name: 'Ethereum (ETH)', pricePLN: data.ethereum.pln, icon: 'fa-ethereum', change: '+1.8%' },
+                        { name: 'Solana (SOL)', pricePLN: data.solana.pln, icon: 'fa-coins', change: '+4.1%' }
+                    ];
+                }
+            } catch(e) {
+                window.cryptoData = [
+                    { name: 'Bitcoin (BTC)', pricePLN: 345200, icon: 'fa-bitcoin', change: '+2.1%' },
+                    { name: 'Ethereum (ETH)', pricePLN: 12850, icon: 'fa-ethereum', change: '-0.5%' },
+                    { name: 'Solana (SOL)', pricePLN: 680, icon: 'fa-coins', change: '+3.8%' }
+                ];
+            }
+            renderFinanceData();
+        }
+
+        function renderFinanceData() {
+            const t = translations[currentLang];
+            const currContainer = document.getElementById('currency-cards-container');
+            currContainer.innerHTML = '';
+
+            financePairs.forEach((pair, idx) => {
+                let displayBase = pair.inverted ? pair.quote : pair.base;
+                let displayQuote = pair.inverted ? pair.base : pair.quote;
+                let displayRate = pair.inverted ? (1 / pair.rate).toFixed(4) : pair.rate.toFixed(4);
+                let displayBid = pair.inverted ? (1 / pair.ask).toFixed(4) : pair.bid.toFixed(4);
+                let displayAsk = pair.inverted ? (1 / pair.bid).toFixed(4) : pair.ask.toFixed(4);
+
+                const card = document.createElement('div');
+                card.className = 'finance-card';
+                card.innerHTML = `
+                    <div class="finance-card-header">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="stat-icon" style="width:36px; height:36px; font-size:16px;"><i class="fa-solid ${pair.icon}"></i></div>
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-muted);">${displayBase} / ${displayQuote}</div>
+                                <div style="font-size: 18px; font-weight: 700;">${displayRate}</div>
+                            </div>
+                        </div>
+                        <button class="currency-swap-btn" title="Reverse currency" onclick="toggleCurrencySwap(${idx})"><i class="fa-solid fa-right-left"></i></button>
+                    </div>
+                    <div class="bid-ask-box">
+                        <div>${t.bid_label || 'Bid'}: <span class="bid-ask-val">${displayBid}</span></div>
+                        <div>${t.ask_label || 'Ask'}: <span class="bid-ask-val">${displayAsk}</span></div>
+                    </div>
+                `;
+                currContainer.appendChild(card);
+            });
+
+            const cryptoContainer = document.getElementById('crypto-cards-container');
+            cryptoContainer.innerHTML = '';
+            const cryptos = window.cryptoData || [
+                { name: 'Bitcoin (BTC)', pricePLN: 345200, icon: 'fa-bitcoin', change: '+2.1%' },
+                { name: 'Ethereum (ETH)', pricePLN: 12850, icon: 'fa-ethereum', change: '-0.5%' },
+                { name: 'Solana (SOL)', pricePLN: 680, icon: 'fa-coins', change: '+3.8%' }
+            ];
+
+            cryptos.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'finance-card';
+                card.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px; justify-content:space-between;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="stat-icon" style="width:36px; height:36px; font-size:16px; background:rgba(245, 158, 11, 0.1); color:#f59e0b;"><i class="fa-solid ${c.icon}"></i></div>
+                            <div>
+                                <div style="font-size: 11px; color: var(--text-muted);">${c.name}</div>
+                                <div style="font-size: 18px; font-weight: 700;">${c.pricePLN.toLocaleString()} PLN</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; font-weight: 600; color: ${c.change.startsWith('+') ? '#22c55e' : '#ef4444'};">${c.change}</div>
+                    </div>
+                `;
+                cryptoContainer.appendChild(card);
+            });
+        }
+
+        function switchTimeMode(mode) {
+            document.querySelectorAll('.time-pane').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`mode-${mode}-pane`).style.display = 'block';
+            document.getElementById(`subtab-${mode}-btn`).classList.add('active');
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerSecondsLeft / 60);
+            const secs = timerSecondsLeft % 60;
+            document.getElementById('timer-display').innerText = 
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function updateTimerUI() {
+            const t = translations[currentLang];
+            const btnSpan = document.querySelector('#timer-toggle-btn span');
+            const btnIcon = document.getElementById('timer-icon-play');
+            const label = document.getElementById('timer-label');
+            const toggleBtn = document.getElementById('timer-toggle-btn');
+
+            if (!btnSpan || !btnIcon || !label) return;
+
+            if (alarmInterval) {
+                btnSpan.innerText = t.btn_reset || "Reset";
+                btnIcon.className = "fa-solid fa-bell-slash";
+                toggleBtn.className = "timer-btn alarm-stop";
+                label.innerText = t.timer_finished || "ALARM! Time's up!";
+                return;
+            }
+
+            toggleBtn.className = "timer-btn start";
+            if (timerRunning) {
+                btnSpan.innerText = t.btn_pause || "Pause";
+                btnIcon.className = "fa-solid fa-pause";
+                label.innerText = t.timer_running || "Countdown running...";
+            } else {
+                btnSpan.innerText = t.btn_start || "Start";
+                btnIcon.className = "fa-solid fa-play";
+                if (timerSecondsLeft === 0) {
+                    label.innerText = t.timer_finished || "Time's up!";
+                } else {
+                    label.innerText = t.timer_ready || "Ready to set";
+                }
+            }
+        }
+
+        function toggleTimer() {
+            if (alarmInterval) {
+                stopAlarm();
+                resetTimer();
+                return;
+            }
+
+            if (!timerRunning) {
+                if (timerSecondsLeft <= 0) timerSecondsLeft = 300;
+                timerRunning = true;
+                updateTimerUI();
+                timerInterval = setInterval(() => {
+                    if (timerSecondsLeft > 0) {
+                        timerSecondsLeft--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        timerRunning = false;
+                        startInfiniteAlarm();
+                    }
+                }, 1000);
+            } else {
+                clearInterval(timerInterval);
+                timerRunning = false;
+                updateTimerUI();
+            }
+        }
+
+        function resetTimer() {
+            stopAlarm();
+            clearInterval(timerInterval);
+            timerRunning = false;
+            timerSecondsLeft = 300;
+            updateTimerDisplay();
+            updateTimerUI();
+        }
+
+        function adjustTimerMinutes(deltaMins) {
+            if (timerRunning || alarmInterval) return;
+            let totalSecs = timerSecondsLeft + (deltaMins * 60);
+            if (totalSecs < 60) totalSecs = 60;
+            if (totalSecs > 3600) totalSecs = 3600;
+            timerSecondsLeft = totalSecs;
+            updateTimerDisplay();
+        }
+
+        function updateStopwatchDisplay() {
+            const mins = Math.floor(swMilliseconds / 60000);
+            const secs = Math.floor((swMilliseconds % 60000) / 1000);
+            const centis = Math.floor((swMilliseconds % 1000) / 10);
+            document.getElementById('stopwatch-display').innerText = 
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(centis).padStart(2, '0')}`;
+        }
+
+        function updateStopwatchUI() {
+            const t = translations[currentLang];
+            const btnSpan = document.querySelector('#sw-toggle-btn span');
+            const btnIcon = document.getElementById('sw-icon-play');
+            if (swRunning) {
+                btnSpan.innerText = t.btn_pause || "Pause";
+                btnIcon.className = "fa-solid fa-pause";
+            } else {
+                btnSpan.innerText = t.btn_start || "Start";
+                btnIcon.className = "fa-solid fa-play";
+            }
+        }
+
+        function toggleStopwatch() {
+            if (!swRunning) {
+                swRunning = true;
+                updateStopwatchUI();
+                let lastTime = Date.now();
+                swInterval = setInterval(() => {
+                    let now = Date.now();
+                    swMilliseconds += (now - lastTime);
+                    lastTime = now;
+                    updateStopwatchDisplay();
+                }, 30);
+            } else {
+                swRunning = false;
+                clearInterval(swInterval);
+                updateStopwatchUI();
+            }
+        }
+
+        function lapStopwatch() {
+            if (!swRunning && swMilliseconds === 0) return;
+            swLaps.unshift(document.getElementById('stopwatch-display').innerText);
+            const lapsBox = document.getElementById('sw-laps-list');
+            lapsBox.style.display = 'block';
+            lapsBox.innerHTML = '';
+            swLaps.forEach((lap, idx) => {
+                lapsBox.innerHTML += `<div class="lap-item"><span>Lap ${swLaps.length - idx}</span><b>${lap}</b></div>`;
+            });
+        }
+
+        function resetStopwatch() {
+            swRunning = false;
+            clearInterval(swInterval);
+            swMilliseconds = 0;
+            swLaps = [];
+            document.getElementById('sw-laps-list').style.display = 'none';
+            updateStopwatchDisplay();
+            updateStopwatchUI();
+        }
+
+        function toggleAlarmActive() {
+            if (alarmInterval) {
+                stopAlarm();
+                return;
+            }
+
+            alarmActive = !alarmActive;
+            const btnText = document.getElementById('alarm-btn-text');
+            const statusLabel = document.getElementById('alarm-status-label');
+            const t = translations[currentLang];
+
+            if (alarmActive) {
+                alarmTargetTime = document.getElementById('alarm-time-input').value;
+                btnText.innerText = "Turn off alarm";
+                statusLabel.innerText = `${t.alarm_on || 'Alarm active for'} ${alarmTargetTime}`;
+                document.getElementById('alarm-toggle-btn').style.background = '#ef4444';
+            } else {
+                btnText.innerText = t.alarm_set || "Turn on alarm";
+                statusLabel.innerText = t.alarm_inactive || "Alarm inactive";
+                document.getElementById('alarm-toggle-btn').style.background = 'var(--accent)';
+            }
+        }
+
+        function checkAlarmClock() {
+            if (!alarmActive || alarmInterval) return;
+            const now = new Date();
+            const currentHm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            if (currentHm === alarmTargetTime) {
+                startInfiniteAlarm();
+                document.getElementById('alarm-status-label').innerText = translations[currentLang].alarm_triggered || "ALARM! Wake up!";
+            }
+        }
+        setInterval(checkAlarmClock, 1000);
+
+        function playSingleBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                let osc = ctx.createOscillator();
+                let gain = ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.value = 1200;
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                gain.gain.setValueAtTime(1.0, ctx.currentTime);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+                osc.stop(ctx.currentTime + 0.4);
+            } catch(e) { console.log(e); }
+        }
+
+        function startInfiniteAlarm() {
+            if (isPlaying) audioElement.volume = 0.02;
+            updateTimerUI();
+            playSingleBeep();
+            alarmInterval = setInterval(() => { playSingleBeep(); }, 800);
+        }
+
+        function stopAlarm() {
+            if (alarmInterval) {
+                clearInterval(alarmInterval);
+                alarmInterval = null;
+            }
+            alarmActive = false;
+            document.getElementById('alarm-btn-text').innerText = translations[currentLang].alarm_set || "Turn on alarm";
+            document.getElementById('alarm-status-label').innerText = translations[currentLang].alarm_inactive || "Alarm inactive";
+            document.getElementById('alarm-toggle-btn').style.background = 'var(--accent)';
+            if (isPlaying) audioElement.volume = 0.5;
+            updateTimerUI();
+        }
+
+        async function searchCityList() {
+            const query = document.getElementById('city-search-input').value.trim();
+            const resultsBox = document.getElementById('city-selection-results');
+            if (!query) return;
+            resultsBox.style.display = 'flex';
+            resultsBox.innerHTML = '<div style="font-size:11px; color:var(--text-muted);">Szukam miast...</div>';
+
+            try {
+                const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=15&language=pl&format=json`);
+                const geoData = await geoRes.json();
+                if (!geoData.results || geoData.results.length === 0) {
+                    resultsBox.innerHTML = '<div style="font-size:11px; color:var(--text-muted);">Nie znaleziono miast.</div>';
+                    return;
+                }
+                resultsBox.innerHTML = '';
+                geoData.results.forEach(place => {
+                    const region = place.admin1 ? `${place.admin1}, ` : '';
+                    const country = place.country || '';
+                    const div = document.createElement('div');
+                    div.className = 'city-item';
+                    div.innerHTML = `<div><b>${place.name}</b><div style="font-size:10px; color:var(--text-muted);">${region}${country}</div></div><button class="btn-action" style="padding:4px 8px; font-size:11px;">Wybierz</button>`;
+                    div.onclick = () => selectCityExact(place);
+                    resultsBox.appendChild(div);
+                });
+            } catch (err) {
+                resultsBox.innerHTML = '<div style="font-size:11px; color:var(--accent);">Błąd sieci.</div>';
+            }
+        }
+
+        function selectCityExact(place) {
+            savedCityObj = {
+                name: place.name,
+                country: place.country || '',
+                admin1: place.admin1 || '',
+                latitude: place.latitude,
+                longitude: place.longitude,
+                timezone: place.timezone || 'auto'
+            };
+            localStorage.setItem('dash_city_obj', JSON.stringify(savedCityObj));
+            document.getElementById('city-selection-results').style.display = 'none';
+            fetchWeatherForCityObj(savedCityObj);
+        }
+
+        async function fetchWeatherForCityObj(cityObj) {
+            try {
+                const t = translations[currentLang];
+                const regionName = (cityObj.name === "Livingston" || !cityObj.admin1) ? t.region_name : cityObj.admin1;
+                const displayName = `${cityObj.name}, ${regionName}`;
+
+                document.getElementById('header-city-name').innerText = displayName;
+                document.getElementById('weather-city-label').innerText = displayName;
+                document.getElementById('saver-city-name').innerText = cityObj.name;
+
+                const tzParam = cityObj.timezone && cityObj.timezone !== 'auto' ? cityObj.timezone : 'auto';
+                const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${cityObj.latitude}&longitude=${cityObj.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&windspeed_unit=kmh&timezone=${tzParam}`);
+                const wData = await wRes.json();
+
+                if (wData.timezone) {
+                    cityObj.timezone = wData.timezone;
+                    localStorage.setItem('dash_city_obj', JSON.stringify(cityObj));
+                }
+
+                const current = wData.current || wData.current_weather;
+                const temp = Math.round(current.temperature_2m || current.temperature);
+                const wind = Math.round(current.wind_speed_10m || current.windspeed || 0);
+                const humidity = Math.round(current.relative_humidity_2m || 0);
+                const weatherCode = current.weather_code !== undefined ? current.weather_code : current.weathercode;
+                const codeInfo = getWeatherInfo(weatherCode);
+
+                document.getElementById('today-temp').innerText = `${temp}°C`;
+                document.getElementById('today-desc').innerText = codeInfo.text;
+                document.getElementById('today-icon').className = `fa-solid ${codeInfo.icon}`;
+                
+                const windLabel = t.wind_label || 'Wind';
+                const humLabel = t.humidity_label || 'Humidity';
+                
+                document.getElementById('today-wind').innerHTML = `<i class="fa-solid fa-wind"></i> ${windLabel}: ${wind} km/h`;
+                document.getElementById('today-humidity').innerHTML = `<i class="fa-solid fa-droplet"></i> ${humLabel}: ${humidity}%`;
+
+                document.getElementById('footer-weather-text').innerText = `${cityObj.name} ${temp}°C, ${codeInfo.text}`;
+                document.getElementById('saver-weather-desc').innerText = `${temp}°C • ${codeInfo.text}`;
+                document.getElementById('saver-weather-extra').innerText = `${windLabel}: ${wind} km/h | ${humLabel}: ${humidity}%`;
+                document.getElementById('saver-weather-icon').className = `fa-solid ${codeInfo.icon}`;
+
+                if (wData.hourly && wData.hourly.time) {
+                    const nowIndex = wData.hourly.time.findIndex(timeStr => new Date(timeStr) >= new Date());
+                    const startIndex = nowIndex !== -1 ? nowIndex : 0;
+                    const hourlyContainer = document.getElementById('saver-hourly-container');
+                    hourlyContainer.innerHTML = '';
+
+                    for (let i = startIndex; i < startIndex + 6 && i < wData.hourly.time.length; i++) {
+                        const timeObj = new Date(wData.hourly.time[i]);
+                        const hourStr = timeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const hTemp = Math.round(wData.hourly.temperature_2m[i]);
+                        const hCodeVal = wData.hourly.weather_code ? wData.hourly.weather_code[i] : wData.hourly.weathercode[i];
+                        const hCode = getWeatherInfo(hCodeVal);
+
+                        const item = document.createElement('div');
+                        item.className = 'saver-hour-item';
+                        item.innerHTML = `
+                            <span>${hourStr}</span>
+                            <i class="fa-solid ${hCode.icon}" style="font-size:13px; color:var(--accent);"></i>
+                            <b>${hTemp}°C</b>
+                        `;
+                        hourlyContainer.appendChild(item);
+                    }
+                }
+
+                const forecastGrid = document.getElementById('forecast-7days-container');
+                forecastGrid.innerHTML = '';
+                wData.daily.time.forEach((dateStr, idx) => {
+                    const dateObj = new Date(dateStr);
+                    const dayName = idx === 0 ? (t.weather_today || 'Today') : dateObj.toLocaleDateString(currentLang, { weekday: 'short' });
+                    const dCodeVal = wData.daily.weather_code ? wData.daily.weather_code[idx] : wData.daily.weathercode[idx];
+                    const dayCode = getWeatherInfo(dCodeVal);
+
+                    const card = document.createElement('div');
+                    card.className = 'day-card';
+                    card.innerHTML = `
+                        <div style="font-size:11px; color:var(--text-muted);">${dayName}</div>
+                        <i class="fa-solid ${dayCode.icon}" style="font-size:18px; color:var(--accent);"></i>
+                        <div style="font-size:14px; font-weight:700;">${Math.round(wData.daily.temperature_2m_max[idx])}°C</div>
+                    `;
+                    forecastGrid.appendChild(card);
+                });
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        function getWeatherInfo(code) {
+            const t = translations[currentLang];
+            if (code === 0) return { text: t.w_sun || 'Sunny', icon: 'fa-sun' };
+            if (code <= 3) return { text: t.w_cloud || 'Cloudy', icon: 'fa-cloud-sun' };
+            if (code <= 48) return { text: t.w_fog || 'Fog', icon: 'fa-smog' };
+            if (code <= 67) return { text: t.w_rain || 'Rain', icon: 'fa-cloud-rain' };
+            if (code <= 77) return { text: t.w_snow || 'Snow', icon: 'fa-snowflake' };
+            return { text: t.w_storm || 'Storm', icon: 'fa-cloud-bolt' };
+        }
+
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('nav .nav-item').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        function updateClock() {
+            try {
+                const tz = savedCityObj && savedCityObj.timezone && savedCityObj.timezone !== 'auto' ? savedCityObj.timezone : undefined;
+                const now = new Date();
+                const timeOpts = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz };
+                const dateOpts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: tz };
+
+                const timeStr = now.toLocaleTimeString('en-GB', timeOpts);
+                const dateStr = now.toLocaleDateString(currentLang, dateOpts);
+
+                document.getElementById('top-clock-display').innerText = timeStr;
+                document.getElementById('saver-clock-display').innerText = timeStr;
+                document.getElementById('saver-date-display').innerText = dateStr;
+                
+                updateRotateContent();
+            } catch (e) {
+                const now = new Date();
+                const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                document.getElementById('top-clock-display').innerText = timeStr;
+                document.getElementById('saver-clock-display').innerText = timeStr;
+                document.getElementById('saver-date-display').innerText = now.toLocaleDateString(currentLang, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function toggleScreensaver() {
+            document.getElementById('screensaver').classList.toggle('active');
+        }
+
+        document.getElementById('screensaver').addEventListener('click', function() {
+            toggleScreensaver();
+        });
+
+        let inactivityTimer;
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            const saver = document.getElementById('screensaver');
+            if (saver.classList.contains('active')) saver.classList.remove('active');
+            inactivityTimer = setTimeout(() => saver.classList.add('active'), 120000);
+        }
+        ['mousemove', 'mousedown', 'keydown', 'touchstart'].forEach(evt => document.addEventListener(evt, resetInactivityTimer, false));
+
+        const savedTheme = localStorage.getItem('dash_theme') || 'purple';
+        document.getElementById('theme-select').value = savedTheme;
+        changeTheme(savedTheme);
+
+        document.getElementById('eq-select').value = equalizerStyle;
+        buildEqualizerHtml();
+
+        changeLanguage(currentLang);
+
+        initStations();
+        if (stations.length > 0) {
+            selectStation(stations[0]);
+        } else {
+            updatePlayUI(false);
+        }
+
+        fetchWeatherForCityObj(savedCityObj);
+        fetchLiveFinances();
+        updateTimerDisplay();
+        updateStopwatchDisplay();
+        updateRotateContent();
+    </script>
+</body>
+</html>
