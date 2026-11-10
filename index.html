@@ -555,12 +555,19 @@
         }
         .news-track-container { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
         .news-track {
-            display: inline-block; white-space: nowrap; animation: tickerScroll 40s linear infinite;
-            font-size: 11px; color: var(--text-main); padding-left: 100%;
+            display: inline-block; 
+            white-space: nowrap; 
+            animation: tickerScroll linear infinite;
+            font-size: 11px; 
+            color: var(--text-main); 
+            padding-left: 100%;
         }
         .news-track span { margin-right: 40px; }
         .news-track span b { color: var(--accent); margin-right: 6px; }
-        @keyframes tickerScroll { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+        @keyframes tickerScroll { 
+            0% { transform: translate3d(0, 0, 0); } 
+            100% { transform: translate3d(-100%, 0, 0); } 
+        }
 
         @media (min-width: 768px) {
             .radio-grid { display: grid; grid-template-columns: 320px 1fr; }
@@ -599,7 +606,7 @@
 
             <div id="tab-radio" class="view-section active">
                 <div class="section-title" data-i18n="radio_title">Radio Player</div>
-                <div class="section-subtitle">Wybierz stację z listy lub dodaj własny link</div>
+                <div class="section-subtitle" data-i18n="radio_subtitle">Wybierz stację z listy lub dodaj własny link</div>
                 
                 <div class="radio-grid">
                     <div class="radio-player-card">
@@ -719,7 +726,6 @@
                 </div>
             </div>
 
-            <!-- NOWA ZAKŁADKA: INFO / O PROJEKCIE -->
             <div id="tab-info" class="view-section">
                 <div class="section-title" data-i18n="info_title">O projekcie i działaniu</div>
                 <div class="section-subtitle" data-i18n="info_subtitle">Dowiedz się więcej o aplikacji Smart Wall Dashboard</div>
@@ -753,7 +759,7 @@
                     <div class="app-card">
                         <i class="fa-brands fa-android"></i>
                         <h3 data-i18n="android_title">Android / APK</h3>
-<a href="https://github.com/eltax2016/MyRadiooo/releases/download/v1.0/MyRadiooo.apk" download onclick="incrementDownloadCount()" class="btn-action" style="padding: 14px 28px; font-size: 16px; width: ...">
+                        <a href="MyRadiooo.apk" download onclick="incrementDownloadCount()" class="btn-action" style="padding: 14px 28px; font-size: 16px; width: 100%; text-decoration: none;">
                             <i class="fa-solid fa-download"></i> <span data-i18n="btn_install_android">Pobierz MyRadiooo.apk</span>
                         </a>
                         <div class="download-counter-badge">
@@ -828,7 +834,7 @@
 
     <footer>
         <div style="display: flex; gap: 12px; align-items: center;">
-            <span>GBP/PLN: 5.1040</span>
+            <span id="footer-gbp-pln">GBP/PLN: --</span>
             <span style="opacity: 0.4;">|</span>
             <span><i class="fa-solid fa-eye" style="color: var(--accent);"></i> <span data-i18n="footer_visits">Odwiedzin</span>: <b id="visit-count-val">1,258</b></span>
         </div>
@@ -839,7 +845,7 @@
     <div id="screensaver">
         <div class="news-ticker-bar">
             <div class="news-badge" data-i18n="news_badge_label"><i class="fa-solid fa-globe"></i> NEWS</div>
-            <div class="news-track-container">
+            <div class="news-track-container" id="news-track-container">
                 <div class="news-track" id="news-ticker-track">
                     <span><b>Loading...</b> Fetching latest information from around the world...</span>
                 </div>
@@ -882,9 +888,7 @@
     </div>
 
     <audio id="audio-stream" crossorigin="anonymous" preload="none"></audio>
-
-    <script>
-        // Obsługa liczników odwiedzin i pobrań z localStorage
+<script>
         let visits = parseInt(localStorage.getItem('dash_visit_count') || '1257') + 1;
         localStorage.setItem('dash_visit_count', visits);
         document.getElementById('visit-count-val').innerText = visits.toLocaleString();
@@ -986,7 +990,7 @@
             ]
         };
 
-        let rotationState = 0; // 0 = imieniny, 1 = cytat
+        let rotationState = 0;
 
         function getQuoteOfDay() {
             const now = new Date();
@@ -1218,52 +1222,109 @@
             }
         };
 
-        const newsDatabase = {
+        const newsFeedsByLang = {
             pl: [
-                "<b>Polska / Świat:</b> Bank Centralny analizuje aktualne wskaźniki gospodarcze i kursy walut.",
-                "<b>Gospodarka:</b> Sektor technologiczny i IT notuje stabilny wzrost inwestycji w Europie.",
-                "<b>Technologia:</b> Nowe standardy transmisji danych mobilnych poprawiają jakość połączeń radiowych.",
-                "<b>Świat:</b> Globalne rynki finansowe skupiają się na najbliższych decyzjach banków centralnych."
+                { url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwiadomosci.wp.pl%2Frss.xml', defaultTag: 'POLSKA' },
+                { url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.onet.pl%2Frss.xml', defaultTag: 'ŚWIAT' }
             ],
             en: [
-                "<b>United Kingdom / World:</b> Central Bank reviews current economic indicators and currency rates.",
-                "<b>Economy:</b> The technology and IT sector registers stable investment growth across Europe.",
-                "<b>Technology:</b> New mobile data transmission standards improve radio streaming quality.",
-                "<b>World:</b> Global financial markets focus on upcoming central bank monetary decisions."
-            ],
-            es: [
-                "<b>España / Mundo:</b> El Banco Central analiza los indicadores económicos actuales y tipos de cambio.",
-                "<b>Economía:</b> El sector tecnológico y de TI registra un crecimiento estable de inversión en Europa.",
-                "<b>Tecnología:</b> Los nuevos estándares de transmisión de datos mejoran la calidad de radio.",
-                "<b>Mundo:</b> Los mercados financieros globales se centran en las próximas decisiones monetarias."
-            ],
-            fr: [
-                "<b>France / Monde :</b> La Banque Centrale analyse les indicateurs économiques actuels et taux de change.",
-                "<b>Économie :</b> Le secteur technologique et informatique enregistre une croissance stable en Europe.",
-                "<b>Technologie :</b> Les nouvelles normes de transmission de données améliorent la qualité audio.",
-                "<b>Monde :</b> Les marchés financiers mondiaux se centrent sur les décisions des banques centrales."
+                { url: 'https://api.rss2json.com/v1/api.json?rss_url=http%3A%2F%2Ffeeds.bbci.co.uk%2Fnews%2Fworld%2Frss.xml', defaultTag: 'WORLD' },
+                { url: 'https://api.rss2json.com/v1/api.json?rss_url=http%3A%2F%2Ffeeds.bbci.co.uk%2Fnews%2Fuk%2Frss.xml', defaultTag: 'UK' },
+                { url: 'https://api.rss2json.com/v1/api.json?rss_url=http%3A%2F%2Ffeeds.bbci.co.uk%2Fnews%2Fscotland%2Frss.xml', defaultTag: 'SCOTLAND' }
             ],
             de: [
-                "<b>Deutschland / Welt:</b> Die Zentralbank prüft aktuelle Wirtschaftsindikatoren und Wechselkurse.",
-                "<b>Wirtschaft:</b> Der Technologie- und IT-Sektor verzeichnet ein stabiles Investitionswachstum in Europa.",
-                "<b>Technologie:</b> Neue Standards für mobile Datenübertragung verbessern die Radio-Streaming-Qualität.",
-                "<b>Welt:</b> Die globalen Finanzmärkte konzentrieren sich auf kommende Notenbankentscheidungen."
+                { url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.tagesschau.de%2fxml%2Frss2%2F', defaultTag: 'WELT' }
+            ],
+            fr: [
+                { url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.franceinfo.fr%2Ftitres.rss', defaultTag: 'MONDE' }
+            ],
+            es: [
+                { url: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fep00.epimg.net%2Frss%2Ftags%2Fnoticias_ultima_hora.xml', defaultTag: 'MUNDO' }
             ]
         };
 
-        function updateNewsTickerForLanguage(langKey) {
-            let newsList = newsDatabase[langKey] || newsDatabase["en"];
+        function getLocalizedTag(title, lang, fallbackTag) {
+            const t = title.toLowerCase();
+            if (t.includes('scotland') || t.includes('edinburgh') || t.includes('livingston') || t.includes('szkocj') || t.includes('glasgow')) {
+                return lang === 'pl' ? 'SZKOCJA' : (lang === 'de' ? 'SCHOTTLAND' : 'SCOTLAND');
+            }
+            if (t.includes('uk') || t.includes('britain') || t.includes('london') || t.includes('londyn') || t.includes('starmer') || t.includes('brytani')) {
+                return lang === 'pl' ? 'WIELKA BRYTANIA' : (lang === 'de' ? 'GROSSBRITANNIEN' : 'UK');
+            }
+            if (t.includes('poland') || t.includes('warsaw') || t.includes('polsk') || t.includes('sejm') || t.includes('tusk')) {
+                return lang === 'pl' ? 'POLSKA' : (lang === 'de' ? 'POLEN' : 'POLAND');
+            }
+            if (t.includes('france') || t.includes('paris') || t.includes('franc') || t.includes('paryż') || t.includes('macron')) {
+                return lang === 'pl' ? 'FRANCJA' : (lang === 'de' ? 'FRANKREICH' : 'FRANCE');
+            }
+            if (t.includes('italy') || t.includes('rome') || t.includes('włoch') || t.includes('rzym') || t.includes('meloni')) {
+                return lang === 'pl' ? 'WŁOCHY' : (lang === 'de' ? 'ITALIEN' : 'ITALY');
+            }
+            if (t.includes('germany') || t.includes('berlin') || t.includes('niemiec') || t.includes('scholz')) {
+                return lang === 'pl' ? 'NIEMCY' : (lang === 'de' ? 'DEUTSCHLAND' : 'GERMANY');
+            }
+            if (t.includes('ukraine') || t.includes('kyiv') || t.includes('ukrain') || t.includes('kijów')) {
+                return lang === 'pl' ? 'UKRAINA' : (lang === 'de' ? 'UKRAINE' : 'UKRAINE');
+            }
+            if (t.includes('usa') || t.includes('trump') || t.includes('biden') || t.includes('america') || t.includes('washington')) {
+                return 'USA';
+            }
+            if (t.includes('china') || t.includes('beijing') || t.includes('chiny') || t.includes('pekin')) {
+                return lang === 'pl' ? 'CHINY' : (lang === 'de' ? 'CHINA' : 'CHINA');
+            }
+            return fallbackTag;
+        }
+
+        async function updateNewsTickerForLanguage(langKey) {
             const trackEl = document.getElementById('news-ticker-track');
-            let htmlContent = "";
-            newsList.forEach(news => {
-                htmlContent += `<span>${news}</span>`;
-            });
-            trackEl.innerHTML = htmlContent + htmlContent;
+            let combinedItems = [];
+            const feeds = newsFeedsByLang[langKey] || newsFeedsByLang['en'];
+
+            try {
+                for (const feed of feeds) {
+                    try {
+                        const res = await fetch(feed.url + '&_t=' + Date.now());
+                        const data = await res.json();
+                        if (data.status === 'ok' && data.items && data.items.length > 0) {
+                            data.items.slice(0, 5).forEach(item => {
+                                const tag = getLocalizedTag(item.title, langKey, feed.defaultTag);
+                                combinedItems.push({ tag: tag, title: item.title });
+                            });
+                        }
+                    } catch (e) {
+                        console.log("Błąd RSS:", e);
+                    }
+                }
+
+                if (combinedItems.length > 0) {
+                    let htmlContent = "";
+                    combinedItems.forEach(item => {
+                        htmlContent += `<span><b>[${item.tag}]:</b> ${item.title}</span>`;
+                    });
+                    trackEl.innerHTML = htmlContent + htmlContent;
+                    
+                    // Dynamiczne dopasowanie czasu animacji w zależności od szerokości tekstu (idealnie stała prędkość dla każdego języka)
+                    setTimeout(() => {
+                        const trackWidth = trackEl.offsetWidth / 2; // połowa ze względu na duplikację zawartości
+                        if (trackWidth > 0) {
+                            const speed = 55; // piksele na sekundę
+                            const duration = trackWidth / speed;
+                            trackEl.style.animationDuration = duration + 's';
+                        }
+                    }, 100);
+                } else {
+                    throw new Error('Brak danych');
+                }
+            } catch (err) {
+                const loadingText = langKey === 'pl' ? 'Pobieranie najświeższych wiadomości...' : 'Fetching latest news...';
+                trackEl.innerHTML = `<span><b>[NEWS]:</b> ${loadingText}</span>`;
+                trackEl.style.animationDuration = '30s';
+            }
         }
 
         setInterval(() => {
             updateNewsTickerForLanguage(currentLang);
-        }, 2 * 60 * 60 * 1000);
+        }, 15 * 60 * 1000);
 
         let audioCtx = null;
         let analyser = null;
@@ -1330,7 +1391,7 @@
                 info_h1: "Czym jest Smart Wall Dashboard?", info_p1: "To wszechstronny pulpit nawigacyjny stworzony z myślą o tabletach, inteligentnych ekranach ściennych oraz przeglądarkach. Łączy w sobie odtwarzacze radia online, aktualną pogodę, finanse i kursy walut na żywo, narzędzia czasu oraz zaawansowany wygaszacz ekranu z wiadomościami i imieninami.",
                 info_h2: "Projekt w fazie testów i rozwoju", info_p2: "Cały system jest stale rozwijany i testowany (Beta). Regularnie wprowadzamy ulepszenia, optymalizujemy działanie strumieni radiowych oraz dodajemy nowe funkcje na podstawie opinii użytkowników.",
                 info_h3: "Jak dodawać własne stacje radiowe?", info_p3: "W zakładce Radio znajdziesz sekcję „Dodaj stację ręcznie”. Aby dodać ulubioną stację:",
-                info_li1: "Wpisz własną nazwę stacji.", info_li2: "Wklej bezpośredni adres URL strumienia audio (musi to być bezpośredni link do pliku MP3/AAC/Stream zaczynający się od https://).", info_li3: "Kliknij przycisk dodawania – stacja natychmiast trafi na Twoją osobistą listę ulubionych.",
+                info_li1: "Wpisz własną nazwę stacji.", info_li2: "Wklej bezpośredni adres URL strumienia audio (musi być to bezpośredni link do pliku MP3/AAC/Stream zaczynający się od https://).", info_li3: "Kliknij przycisk dodawania – stacja natychmiast trafi na Twoją osobistą listę ulubionych.",
                 app_tab_title: "Smart Wall Dashboard - Aplikacja", app_tab_sub: "Pobierz plik instalacyjny dla systemu Android",
                 android_title: "Android / APK", btn_install_android: "Pobierz MyRadiooo.apk", dl_counter_text: "Pobrań aplikacji:",
                 settings_title: "Ustawienia", settings_subtitle: "Wybierz miasto, motyw i język",
@@ -1490,6 +1551,62 @@
             { id: 'eur', base: 'EUR', quote: 'PLN', inverted: false, rate: 4.3120, bid: 4.3100, ask: 4.3145, icon: 'fa-euro-sign' },
             { id: 'chf', base: 'CHF', quote: 'PLN', inverted: false, rate: 4.5820, bid: 4.5795, ask: 4.5845, icon: 'fa-franc-sign' }
         ];
+
+        async function fetchLiveFinances() {
+            try {
+                // Pobieranie aktualnych kursów walut względem PLN z publicznego API NBP / exchangerate
+                const fxRes = await fetch('https://api.exchangerate-api.com/v4/latest/PLN');
+                const fxData = await fxRes.json();
+                if (fxData && fxData.rates) {
+                    // fxData.rates podaje ile jednostek obcej waluty jest za 1 PLN, więc przeliczamy na PLN za 1 jednostkę
+                    const gbpRate = 1 / fxData.rates.GBP;
+                    const usdRate = 1 / fxData.rates.USD;
+                    const eurRate = 1 / fxData.rates.EUR;
+                    const chfRate = 1 / fxData.rates.CHF;
+
+                    financePairs[0].rate = gbpRate;
+                    financePairs[0].bid = gbpRate * 0.9995;
+                    financePairs[0].ask = gbpRate * 1.0010;
+
+                    financePairs[1].rate = usdRate;
+                    financePairs[1].bid = usdRate * 0.9995;
+                    financePairs[1].ask = usdRate * 1.0010;
+
+                    financePairs[2].rate = eurRate;
+                    financePairs[2].bid = eurRate * 0.9995;
+                    financePairs[2].ask = eurRate * 1.0010;
+
+                    financePairs[3].rate = chfRate;
+                    financePairs[3].bid = chfRate * 0.9995;
+                    financePairs[3].ask = chfRate * 1.0010;
+
+                    const gbpPlnEl = document.getElementById('footer-gbp-pln');
+                    if (gbpPlnEl) gbpPlnEl.innerText = `GBP/PLN: ${gbpRate.toFixed(4)}`;
+                }
+            } catch (e) {
+                console.log("Błąd pobierania FX:", e);
+            }
+
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=pln,gbp,usd');
+                const data = await res.json();
+                
+                if (data.bitcoin) {
+                    window.cryptoData = [
+                        { name: 'Bitcoin (BTC)', pricePLN: data.bitcoin.pln, icon: 'fa-bitcoin', change: '+2.4%' },
+                        { name: 'Ethereum (ETH)', pricePLN: data.ethereum.pln, icon: 'fa-ethereum', change: '+1.8%' },
+                        { name: 'Solana (SOL)', pricePLN: data.solana.pln, icon: 'fa-coins', change: '+4.1%' }
+                    ];
+                }
+            } catch(e) {
+                window.cryptoData = [
+                    { name: 'Bitcoin (BTC)', pricePLN: 345200, icon: 'fa-bitcoin', change: '+2.1%' },
+                    { name: 'Ethereum (ETH)', pricePLN: 12850, icon: 'fa-ethereum', change: '-0.5%' },
+                    { name: 'Solana (SOL)', pricePLN: 680, icon: 'fa-coins', change: '+3.8%' }
+                ];
+            }
+            renderFinanceData();
+        }
 
         function changeLanguage(langKey) {
             currentLang = translations[langKey] ? langKey : 'en';
@@ -1677,6 +1794,7 @@
             { id: 'def_25', name: 'Vox - Disco Polska', url: 'https://waw.ic.smcdn.pl/6080-1.mp3' },
             { id: 'def_26', name: 'Vox - DJ Mix', url: 'https://waw.ic.smcdn.pl/6020-1.mp3' }
         ];
+
         let stations = customStations;
         let currentStation = stations.length > 0 ? stations[0] : null;
 
@@ -1945,28 +2063,6 @@
 
         function toggleCurrencySwap(index) {
             financePairs[index].inverted = !financePairs[index].inverted;
-            renderFinanceData();
-        }
-
-        async function fetchLiveFinances() {
-            try {
-                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=pln,gbp,usd');
-                const data = await res.json();
-                
-                if (data.bitcoin) {
-                    window.cryptoData = [
-                        { name: 'Bitcoin (BTC)', pricePLN: data.bitcoin.pln, icon: 'fa-bitcoin', change: '+2.4%' },
-                        { name: 'Ethereum (ETH)', pricePLN: data.ethereum.pln, icon: 'fa-ethereum', change: '+1.8%' },
-                        { name: 'Solana (SOL)', pricePLN: data.solana.pln, icon: 'fa-coins', change: '+4.1%' }
-                    ];
-                }
-            } catch(e) {
-                window.cryptoData = [
-                    { name: 'Bitcoin (BTC)', pricePLN: 345200, icon: 'fa-bitcoin', change: '+2.1%' },
-                    { name: 'Ethereum (ETH)', pricePLN: 12850, icon: 'fa-ethereum', change: '-0.5%' },
-                    { name: 'Solana (SOL)', pricePLN: 680, icon: 'fa-coins', change: '+3.8%' }
-                ];
-            }
             renderFinanceData();
         }
 
@@ -2452,6 +2548,7 @@
         buildEqualizerHtml();
 
         changeLanguage(currentLang);
+        updateNewsTickerForLanguage(currentLang);
 
         initStations();
         if (stations.length > 0) {
